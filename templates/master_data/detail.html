@@ -1,0 +1,187 @@
+{% extends 'base.html' %}
+{% load master_data_extras %}
+
+{% block title %}{{ dataset.name }} - Master Data{% endblock %}
+
+{% block content %}
+<div class="flex justify-between items-center mb-6">
+    <div>
+        <h1 class="text-3xl font-bold">{{ dataset.name }}</h1>
+        <p class="text-gray-600">{{ dataset.description }}</p>
+    </div>
+    <div class="flex gap-2">
+        <a href="{% url 'master_data:edit' dataset.pk %}" class="btn btn-outline btn-sm">Edit Details</a>
+        <a href="{% url 'master_data:import' dataset.pk %}" class="btn btn-primary btn-sm">Import Data</a>
+        <a href="{% url 'master_data:share' dataset.pk %}" class="btn btn-secondary btn-sm">Share</a>
+    </div>
+</div>
+
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+    <!-- Column Management -->
+    <div class="lg:col-span-1">
+        <div class="card bg-base-100 shadow-xl">
+            <div class="card-body">
+                <h2 class="card-title">Columns</h2>
+                
+                <div id="columns-list" class="space-y-2 mb-4">
+                    {% for column in dataset.columns.all %}
+                        <div class="flex justify-between items-center p-2 bg-base-200 rounded">
+                            <div>
+                                <span class="font-medium">{{ column.name }}</span>
+                                <span class="text-sm text-gray-500">({{ column.get_data_type_display }})</span>
+                                {% if column.is_required %}
+                                    <span class="badge badge-error badge-xs">Required</span>
+                                {% endif %}
+                            </div>
+                            <div class="flex gap-1">
+                                <button class="btn btn-xs btn-outline" onclick="editColumn({{ column.id }})">Edit</button>
+                                <button class="btn btn-xs btn-error" onclick="deleteColumn({{ column.id }})">Del</button>
+                            </div>
+                        </div>
+                    {% empty %}
+                        <p class="text-center text-gray-500">No columns defined yet.</p>
+                    {% endfor %}
+                </div>
+                
+                <!-- Add Column Form -->
+                <div class="divider">Add Column</div>
+                <form id="add-column-form" class="space-y-2">
+                    {% csrf_token %}
+                    <input type="hidden" name="dataset_id" value="{{ dataset.id }}">
+                    <input type="text" name="name" placeholder="Column Name" class="input input-bordered input-sm w-full" required>
+                    <select name="data_type" class="select select-bordered select-sm w-full">
+                        <option value="text">Text</option>
+                        <option value="number">Number</option>
+                        <option value="date">Date</option>
+                        <option value="email">Email</option>
+                    </select>
+                    <label class="label cursor-pointer">
+                        <span class="label-text">Required</span>
+                        <input type="checkbox" name="is_required" class="checkbox checkbox-sm">
+                    </label>
+                    <button type="submit" class="btn btn-primary btn-sm w-full">Add Column</button>
+                </form>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Data Table -->
+    <div class="lg:col-span-2">
+        <div class="card bg-base-100 shadow-xl">
+            <div class="card-body">
+                <div class="flex justify-between items-center mb-4">
+                    <h2 class="card-title">Data Records</h2>
+                    <div class="flex gap-2">
+                        <button class="btn btn-outline btn-sm" onclick="addRecord()">Add Record</button>
+                        <button class="btn btn-primary btn-sm" onclick="exportData()">Export CSV</button>
+                    </div>
+                </div>
+                
+                {% if dataset.columns.exists %}
+                    <div class="overflow-x-auto">
+                        <table class="table table-zebra table-sm">
+                            <thead>
+                                <tr>
+                                    <th>#</th>
+                                    {% for column in dataset.columns.all %}
+                                        <th>{{ column.name }}</th>
+                                    {% endfor %}
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for record in dataset.records.all %}
+                                    <tr>
+                                        <td>{{ forloop.counter }}</td>
+                                        {% for column in dataset.columns.all %}
+                                            <td>{{ record.data|get_item:column.name|default:"-" }}</td>
+                                        {% endfor %}
+                                        <td>
+                                            <div class="flex gap-1">
+                                                <button class="btn btn-xs btn-outline" onclick="editRecord({{ record.id }})">Edit</button>
+                                                <button class="btn btn-xs btn-error" onclick="deleteRecord({{ record.id }})">Del</button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                {% empty %}
+                                    <tr>
+                                        <td colspan="{{ dataset.columns.count|add:2 }}" class="text-center text-gray-500">No records yet.</td>
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                {% else %}
+                    <div class="text-center py-8">
+                        <p class="text-gray-500">Define columns first to start adding data.</p>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modals will go here -->
+<div id="record-modal" class="modal">
+    <div class="modal-box">
+        <h3 class="font-bold text-lg">Add/Edit Record</h3>
+        <form id="record-form" class="space-y-4 py-4">
+            {% csrf_token %}
+            <input type="hidden" name="record_id" id="record-id">
+            <!-- Dynamic form fields will be added here by JavaScript -->
+            <div id="record-fields"></div>
+            <div class="modal-action">
+                <button type="submit" class="btn btn-primary">Save</button>
+                <button type="button" class="btn" onclick="closeModal()">Cancel</button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+// JavaScript functions for dynamic column and record management
+// These would normally use HTMX for real-time updates
+function addRecord() {
+    // Implementation for adding records
+    console.log('Add record functionality will be implemented');
+}
+
+function editRecord(recordId) {
+    // Implementation for editing records
+    console.log('Edit record:', recordId);
+}
+
+function deleteRecord(recordId) {
+    // Implementation for deleting records
+    console.log('Delete record:', recordId);
+}
+
+function editColumn(columnId) {
+    // Implementation for editing columns
+    console.log('Edit column:', columnId);
+}
+
+function deleteColumn(columnId) {
+    // Implementation for deleting columns
+    console.log('Delete column:', columnId);
+}
+
+function exportData() {
+    // Implementation for CSV export
+    window.location.href = `/master-data/{{ dataset.pk }}/export/`;
+}
+
+function closeModal() {
+    document.getElementById('record-modal').checked = false;
+}
+
+// Add column form submission
+document.getElementById('add-column-form').addEventListener('submit', function(e) {
+    e.preventDefault();
+    // Implementation for adding columns via AJAX
+    console.log('Add column form submitted');
+});
+</script>
+{% endblock %}

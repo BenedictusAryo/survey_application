@@ -1,0 +1,47 @@
+{% extends 'base.html' %}
+
+{% block title %}Thank You - {{ survey_form.title }}{% endblock %}
+
+{% block content %}
+<div class="min-h-[60vh] flex items-center justify-center">
+    <div class="card w-full max-w-2xl shadow-xl bg-base-100">
+        <div class="card-body text-center">
+            <div class="text-6xl mb-4">🎉</div>
+            <h1 class="text-3xl font-bold text-success mb-4">Thank You!</h1>
+            <h2 class="text-xl font-semibold mb-2">{{ survey_form.title }}</h2>
+            <p class="text-gray-600 mb-6">
+                Your response has been successfully submitted. We appreciate you taking the time to complete this survey.
+            </p>
+            
+            <div class="stats shadow mb-6">
+                <div class="stat">
+                    <div class="stat-figure text-primary">
+                        <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+                                  d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                        </svg>
+                    </div>
+                    <div class="stat-title">Status</div>
+                    <div class="stat-value text-primary">Submitted</div>
+                    <div class="stat-desc">{{ "now"|date:"M d, Y H:i" }}</div>
+                </div>
+            </div>
+            
+            <p class="text-sm text-gray-500 mb-4">
+                Your response has been recorded anonymously and securely.
+            </p>
+            
+            <div class="card-actions justify-center">
+                <a href="/" class="btn btn-primary">Return to Home</a>
+                {% if survey_form.qr_code %}
+                    <div class="divider">Share this survey</div>
+                    <div class="text-center">
+                        <img src="{{ survey_form.qr_code.url }}" alt="QR Code" class="w-32 h-32 mx-auto mb-2">
+                        <p class="text-xs text-gray-500">Scan to access this survey</p>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

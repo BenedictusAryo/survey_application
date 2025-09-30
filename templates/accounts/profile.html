@@ -1,0 +1,64 @@
+{% extends 'base.html' %}
+
+{% block title %}Profile - Survey Application{% endblock %}
+
+{% block content %}
+<div class="max-w-2xl mx-auto">
+    <div class="card shadow-xl bg-base-100">
+        <div class="card-body">
+            <h2 class="card-title text-2xl mb-4">User Profile</h2>
+            
+            <form method="post">
+                {% csrf_token %}
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div class="form-control w-full">
+                        <label class="label" for="id_first_name">
+                            <span class="label-text">First Name</span>
+                        </label>
+                        <input type="text" name="first_name" id="id_first_name" class="input input-bordered w-full" value="{{ form.first_name.value|default:user.first_name }}">
+                    </div>
+                    
+                    <div class="form-control w-full">
+                        <label class="label" for="id_last_name">
+                            <span class="label-text">Last Name</span>
+                        </label>
+                        <input type="text" name="last_name" id="id_last_name" class="input input-bordered w-full" value="{{ form.last_name.value|default:user.last_name }}">
+                    </div>
+                </div>
+                
+                <div class="form-control w-full">
+                    <label class="label" for="id_email">
+                        <span class="label-text">Email</span>
+                    </label>
+                    <input type="email" name="email" id="id_email" class="input input-bordered w-full" value="{{ form.email.value|default:user.email }}" required>
+                </div>
+                
+                <div class="form-control w-full">
+                    <label class="label">
+                        <span class="label-text">Username</span>
+                    </label>
+                    <input type="text" class="input input-bordered w-full" value="{{ user.username }}" readonly>
+                    <label class="label">
+                        <span class="label-text-alt">Username cannot be changed</span>
+                    </label>
+                </div>
+                
+                <div class="form-control w-full">
+                    <label class="label">
+                        <span class="label-text">Role</span>
+                    </label>
+                    <input type="text" class="input input-bordered w-full" value="{{ user.get_role_display }}" readonly>
+                    <label class="label">
+                        <span class="label-text-alt">Role is managed by administrators</span>
+                    </label>
+                </div>
+                
+                <div class="form-control mt-6">
+                    <button type="submit" class="btn btn-primary">Update Profile</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

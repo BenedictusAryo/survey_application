@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Survey Application{% endblock %}</title>
+    
+    <!-- Tailwind CSS and DaisyUI -->
+    <link href="https://cdn.jsdelivr.net/npm/daisyui@4.4.0/dist/full.min.css" rel="stylesheet" type="text/css" />
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- HTMX for interactivity -->
+    <script src="https://unpkg.com/htmx.org@1.9.8"></script>
+    
+    <!-- Alpine.js for reactive components -->
+    <script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
+    
+    {% block extra_head %}{% endblock %}
+</head>
+<body class="bg-base-100">
+    {% include 'partials/navbar.html' %}
+    
+    <main class="container mx-auto px-4 py-6 max-w-7xl">
+        {% include 'partials/messages.html' %}
+        {% block content %}{% endblock %}
+    </main>
+    
+    {% include 'partials/footer.html' %}
+    {% block extra_scripts %}{% endblock %}
+</body>
+</html>

@@ -1,0 +1,30 @@
+{% extends 'base.html' %}
+
+{% block title %}Forms - Survey Application{% endblock %}
+
+{% block content %}
+<div class="flex justify-between items-center mb-6">
+    <h1 class="text-3xl font-bold">My Forms</h1>
+    <a href="{% url 'forms:create' %}" class="btn btn-primary">Create New Form</a>
+</div>
+
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+    {% for form in forms %}
+        <div class="card bg-base-100 shadow-xl">
+            <div class="card-body">
+                <h2 class="card-title">{{ form.title }}</h2>
+                <p>{{ form.description|truncatewords:20 }}</p>
+                <div class="badge badge-{{ form.status|default:'draft' }}">{{ form.get_status_display }}</div>
+                <div class="card-actions justify-end">
+                    <a href="{% url 'forms:detail' form.pk %}" class="btn btn-primary btn-sm">View</a>
+                </div>
+            </div>
+        </div>
+    {% empty %}
+        <div class="col-span-full text-center py-12">
+            <p class="text-lg text-gray-600">No forms yet.</p>
+            <a href="{% url 'forms:create' %}" class="btn btn-primary mt-4">Create Your First Form</a>
+        </div>
+    {% endfor %}
+</div>
+{% endblock %}
