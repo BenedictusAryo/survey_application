@@ -1,16 +1,12 @@
-from django.shortcuts import render, get_object_or_404, redirect
+from django.shortcuts import get_object_or_404, redirect
 from django.views.generic import ListView, CreateView, DetailView, UpdateView
+from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib import messages
 from django.urls import reverse_lazy
-from django.http import JsonResponse, HttpResponse
-from django.views.decorators.csrf import csrf_exempt
-from django.utils.decorators import method_decorator
-from django.conf import settings
+from django.http import HttpResponse
 import pandas as pd
-import json
 import csv
-from io import StringIO
 from .models import MasterDataSet, MasterDataColumn, MasterDataRecord
 
 class MasterDataListView(LoginRequiredMixin, ListView):
@@ -37,6 +33,28 @@ class MasterDataDetailView(LoginRequiredMixin, DetailView):
     template_name = 'master_data/detail.html'
     context_object_name = 'dataset'
 
+    def get_context_data(self, **kwargs):
+        """Add paginated records to the template context as `records_page`.
+
+        Pagination is controlled by the `page` query parameter and shows 20
+        records per page by default.
+        """
+        context = super().get_context_data(**kwargs)
+        dataset = self.object
+
+        records_qs = dataset.records.all().order_by('id')
+        paginator = Paginator(records_qs, 20)
+        page = self.request.GET.get('page')
+        try:
+            records_page = paginator.page(page)
+        except PageNotAnInteger:
+            records_page = paginator.page(1)
+        except EmptyPage:
+            records_page = paginator.page(paginator.num_pages)
+
+        context['records_page'] = records_page
+        return context
+
 class MasterDataEditView(LoginRequiredMixin, UpdateView):
     model = MasterDataSet
     fields = ['name', 'description']
@@ -53,6 +71,8 @@ class MasterDataImportView(LoginRequiredMixin, DetailView):
     
     def post(self, request, *args, **kwargs):
         dataset = self.get_object()
+        # Ensure DetailView helpers that rely on self.object work in POST
+        self.object = dataset
         
         if 'file' not in request.FILES:
             messages.error(request, 'No file uploaded.')
@@ -70,6 +90,9 @@ class MasterDataImportView(LoginRequiredMixin, DetailView):
             else:
                 messages.error(request, 'Unsupported file format. Please use CSV or Excel files.')
                 return self.get(request, *args, **kwargs)
+            
+            # Convert all data to strings to ensure JSON serializability
+            df = df.astype(str)
             
             # Convert to list of dicts for preview
             preview_data = df.fillna('').to_dict('records')

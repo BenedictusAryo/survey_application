@@ -78,7 +78,11 @@ class FormCollaborationAdmin(admin.ModelAdmin):
 
 @admin.register(FormMasterDataAttachment)
 class FormMasterDataAttachmentAdmin(admin.ModelAdmin):
-    list_display = ('form', 'dataset', 'order')
+    list_display = ('form', 'dataset', 'order', 'hidden_columns_display')
     list_filter = ('form', 'dataset')
     search_fields = ('form__title', 'dataset__name')
     list_editable = ('order',)
+
+    def hidden_columns_display(self, obj):
+        return ', '.join(obj.hidden_columns or [])
+    hidden_columns_display.short_description = 'Hidden columns'

@@ -5,7 +5,7 @@ import uuid
 import qrcode
 from io import BytesIO
 from django.core.files import File
-from PIL import Image
+# ...existing code...
 
 class Form(models.Model):
     """Survey form that can be published and shared"""
@@ -61,7 +61,6 @@ class Form(models.Model):
     
     def generate_qr_code(self):
         """Generate QR code for the form URL"""
-        from django.urls import reverse
         qr = qrcode.QRCode(version=1, box_size=10, border=5)
         # In production, use actual domain
         form_url = f"http://survey.parokibintaro.org/survey/{self.slug}/"
@@ -99,10 +98,18 @@ class FormMasterDataAttachment(models.Model):
     form = models.ForeignKey(Form, on_delete=models.CASCADE, related_name='master_data_attachments')
     dataset = models.ForeignKey('master_data.MasterDataSet', on_delete=models.CASCADE)
     order = models.PositiveIntegerField(default=0)
+    # List of column names from the dataset that should be hidden when this
+    # dataset is used in the context of this form. Stored as a JSON list.
+    hidden_columns = models.JSONField(default=list, blank=True)
     
     class Meta:
         ordering = ['order']
         unique_together = ['form', 'dataset']
+
+    def get_visible_columns(self):
+        """Return the dataset's columns excluding any hidden columns for this attachment."""
+        hidden = set(self.hidden_columns or [])
+        return [c for c in self.dataset.columns.all() if c.name not in hidden]
 
 
 class FormQuestion(models.Model):

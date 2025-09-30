@@ -79,6 +79,26 @@
                 
                 {% if dataset.columns.exists %}
                     <div class="overflow-x-auto">
+                        <style>
+                        /* highlighted empty cells - dark red but less saturated */
+                        .md-empty-cell {
+                            /* slightly stronger background for legibility */
+                            background-color: rgba(153, 51, 51, 0.12) !important;
+                            vertical-align: middle;
+                            text-align: center;
+                        }
+                        .md-empty-cell .md-empty-value {
+                            color: #5a0b0b !important; /* darker, readable red */
+                            font-weight: 800;
+                            display: block;
+                            width: 100%;
+                            text-align: center;
+                            padding: 0.25rem 0;
+                            font-size: .95rem;
+                            letter-spacing: .02em;
+                        }
+                        </style>
+
                         <table class="table table-zebra table-sm">
                             <thead>
                                 <tr>
@@ -90,11 +110,17 @@
                                 </tr>
                             </thead>
                             <tbody>
-                                {% for record in dataset.records.all %}
+                                {% for record in records_page.object_list %}
                                     <tr>
-                                        <td>{{ forloop.counter }}</td>
+                                        <td>{{ forloop.counter0|add:records_page.start_index }}</td>
                                         {% for column in dataset.columns.all %}
-                                            <td>{{ record.data|get_item:column.name|default:"-" }}</td>
+                                            {% with value=record.data|get_item:column.name %}
+                                                {% if value|is_empty %}
+                                                    <td class="md-empty-cell"><span class="md-empty-value inline-block px-2 py-0.5 rounded text-sm font-semibold text-red-800 bg-red-100" title="empty (missing value)" aria-label="empty">empty</span></td>
+                                                {% else %}
+                                                    <td>{{ value }}</td>
+                                                {% endif %}
+                                            {% endwith %}
                                         {% endfor %}
                                         <td>
                                             <div class="flex gap-1">
@@ -110,6 +136,25 @@
                                 {% endfor %}
                             </tbody>
                         </table>
+                    </div>
+
+                    <!-- Pagination controls -->
+                    <div class="mt-4 flex items-center justify-end">
+                        <div class="btn-group">
+                            {% if records_page.has_previous %}
+                                <a class="btn btn-outline btn-sm" href="?page={{ records_page.previous_page_number }}">« Prev</a>
+                            {% else %}
+                                <span class="btn btn-disabled btn-sm">« Prev</span>
+                            {% endif %}
+
+                            <span class="btn btn-ghost btn-sm">Page {{ records_page.number }} / {{ records_page.paginator.num_pages }}</span>
+
+                            {% if records_page.has_next %}
+                                <a class="btn btn-outline btn-sm" href="?page={{ records_page.next_page_number }}">Next »</a>
+                            {% else %}
+                                <span class="btn btn-disabled btn-sm">Next »</span>
+                            {% endif %}
+                        </div>
                     </div>
                 {% else %}
                     <div class="text-center py-8">
