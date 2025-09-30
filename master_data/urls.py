@@ -9,5 +9,7 @@ urlpatterns = [
     path('<int:pk>/', views.MasterDataDetailView.as_view(), name='detail'),
     path('<int:pk>/edit/', views.MasterDataEditView.as_view(), name='edit'),
     path('<int:pk>/import/', views.MasterDataImportView.as_view(), name='import'),
+    path('<int:pk>/import/confirm/', views.import_confirm, name='import_confirm'),
+    path('<int:pk>/export/', views.export_csv, name='export'),
     path('<int:pk>/share/', views.MasterDataShareView.as_view(), name='share'),
 ]
