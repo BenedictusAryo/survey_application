@@ -1,1 +1,55 @@
-{% extends 'base.html' %}{% block content %}<h1>Coming soon: publish</h1>{% endblock %}
+{% extends 'base.html' %}
+
+{% block title %}Publish Form - {{ object.title }}{% endblock %}
+
+{% block content %}
+<div class="hero min-h-[60vh] bg-base-200 rounded-lg">
+    <div class="hero-content text-center">
+        <div class="max-w-md">
+            <div class="flex justify-center mb-6">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-24 w-24 text-warning" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
+                </svg>
+            </div>
+            <h1 class="text-5xl font-bold mb-4">Coming Soon</h1>
+            <h2 class="text-2xl font-semibold text-primary mb-4">Form Publishing</h2>
+            <p class="py-6 text-lg">
+                The form publishing feature will allow you to make your surveys publicly accessible via a unique URL and QR code. 
+                You'll be able to control visibility, enable password protection, and manage response settings.
+            </p>
+            
+            <div class="alert alert-info shadow-lg mb-6">
+                <svg xmlns="http://www.w3.org/2000/svg" class="stroke-current flex-shrink-0 h-6 w-6" fill="none" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                </svg>
+                <div class="text-left">
+                    <p class="font-bold">Form: {{ object.title }}</p>
+                    <p class="text-sm">Status: {{ object.get_status_display }}</p>
+                </div>
+            </div>
+
+            <div class="space-y-3 text-left mb-6">
+                <h3 class="font-bold text-lg">Planned Features:</h3>
+                <ul class="list-disc list-inside space-y-2 text-base-content/70">
+                    <li>Generate unique public URL for survey access</li>
+                    <li>Automatic QR code generation</li>
+                    <li>Password protection options</li>
+                    <li>Response limit settings</li>
+                    <li>Publish/unpublish controls</li>
+                    <li>Share via WhatsApp or other platforms</li>
+                </ul>
+            </div>
+            
+            <div class="flex gap-3 justify-center">
+                <a href="{% url 'forms:detail' object.pk %}" class="btn btn-primary">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+                    </svg>
+                    Back to Form Details
+                </a>
+                <a href="{% url 'forms:list' %}" class="btn btn-outline">View All Forms</a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

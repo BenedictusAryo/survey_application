@@ -1,1 +1,53 @@
-{% extends 'base.html' %}{% block content %}<h1>Coming soon: submit</h1>{% endblock %}
+{% extends 'base.html' %}
+
+{% block title %}Submit Survey{% endblock %}
+
+{% block content %}
+<div class="hero min-h-[60vh] bg-base-200 rounded-lg">
+    <div class="hero-content text-center">
+        <div class="max-w-md">
+            <div class="flex justify-center mb-6">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-24 w-24 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+            </div>
+            <h1 class="text-5xl font-bold mb-4">Coming Soon</h1>
+            <h2 class="text-2xl font-semibold text-primary mb-4">Survey Submission</h2>
+            <p class="py-6 text-lg">
+                The survey submission handler will process and validate your responses, 
+                ensuring data integrity and proper storage. This endpoint handles the form POST submission.
+            </p>
+
+            <div class="space-y-3 text-left mb-6">
+                <h3 class="font-bold text-lg">Planned Features:</h3>
+                <ul class="list-disc list-inside space-y-2 text-base-content/70">
+                    <li>Validate all form responses</li>
+                    <li>Handle conditional question logic</li>
+                    <li>Process file uploads and images</li>
+                    <li>Link responses to master data records</li>
+                    <li>Support duplicate/unique entry validation</li>
+                    <li>CAPTCHA verification</li>
+                    <li>Rate limiting protection</li>
+                    <li>Auto-save drafts feature</li>
+                </ul>
+            </div>
+
+            <div class="alert alert-warning shadow-lg mb-6">
+                <svg xmlns="http://www.w3.org/2000/svg" class="stroke-current flex-shrink-0 h-6 w-6" fill="none" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                </svg>
+                <span>This is an internal endpoint. Please access surveys through the public survey page.</span>
+            </div>
+            
+            <div class="flex gap-3 justify-center">
+                <a href="{% url 'home' %}" class="btn btn-primary">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
+                    </svg>
+                    Go to Home
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

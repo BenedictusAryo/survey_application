@@ -1,4 +1,55 @@
 {% extends 'base.html' %}
+
+{% block title %}Edit Master Data - {{ dataset.name }}{% endblock %}
+
 {% block content %}
-<h1>Coming soon</h1>
+<div class="hero min-h-[60vh] bg-base-200 rounded-lg">
+    <div class="hero-content text-center">
+        <div class="max-w-md">
+            <div class="flex justify-center mb-6">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-24 w-24 text-info" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                </svg>
+            </div>
+            <h1 class="text-5xl font-bold mb-4">Coming Soon</h1>
+            <h2 class="text-2xl font-semibold text-info mb-4">Master Data Editor</h2>
+            <p class="py-6 text-lg">
+                The master data editor will provide an Excel-like interface for editing your data sets. 
+                You'll be able to add, edit, and delete records and columns directly in your browser.
+            </p>
+            
+            <div class="alert alert-info shadow-lg mb-6">
+                <svg xmlns="http://www.w3.org/2000/svg" class="stroke-current flex-shrink-0 h-6 w-6" fill="none" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                </svg>
+                <div class="text-left">
+                    <p class="font-bold">Dataset: {{ dataset.name }}</p>
+                    <p class="text-sm">Records: {{ dataset.records.count }}</p>
+                </div>
+            </div>
+
+            <div class="space-y-3 text-left mb-6">
+                <h3 class="font-bold text-lg">Planned Features:</h3>
+                <ul class="list-disc list-inside space-y-2 text-base-content/70">
+                    <li>Edit dataset name and description</li>
+                    <li>Add, edit, and delete columns</li>
+                    <li>Inline editing of data records</li>
+                    <li>Bulk operations (delete, update)</li>
+                    <li>Column reordering and sorting</li>
+                    <li>Data validation rules</li>
+                </ul>
+            </div>
+            
+            <div class="flex gap-3 justify-center">
+                <a href="{% url 'master_data:detail' dataset.pk %}" class="btn btn-primary">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+                    </svg>
+                    Back to Dataset Details
+                </a>
+                <a href="{% url 'master_data:list' %}" class="btn btn-outline">View All Datasets</a>
+            </div>
+        </div>
+    </div>
+</div>
 {% endblock %}

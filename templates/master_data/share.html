@@ -1,4 +1,55 @@
 {% extends 'base.html' %}
+
+{% block title %}Share Master Data - {{ dataset.name }}{% endblock %}
+
 {% block content %}
-<h1>Coming soon</h1>
+<div class="hero min-h-[60vh] bg-base-200 rounded-lg">
+    <div class="hero-content text-center">
+        <div class="max-w-md">
+            <div class="flex justify-center mb-6">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-24 w-24 text-success" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" />
+                </svg>
+            </div>
+            <h1 class="text-5xl font-bold mb-4">Coming Soon</h1>
+            <h2 class="text-2xl font-semibold text-success mb-4">Share Master Data</h2>
+            <p class="py-6 text-lg">
+                Share your master data sets with other users for collaboration. Grant view-only access 
+                so others can attach your data to their forms without being able to modify it.
+            </p>
+            
+            <div class="alert alert-info shadow-lg mb-6">
+                <svg xmlns="http://www.w3.org/2000/svg" class="stroke-current flex-shrink-0 h-6 w-6" fill="none" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                </svg>
+                <div class="text-left">
+                    <p class="font-bold">Dataset: {{ dataset.name }}</p>
+                    <p class="text-sm">Owner: {{ dataset.owner.username }}</p>
+                </div>
+            </div>
+
+            <div class="space-y-3 text-left mb-6">
+                <h3 class="font-bold text-lg">Planned Features:</h3>
+                <ul class="list-disc list-inside space-y-2 text-base-content/70">
+                    <li>Share dataset with specific users</li>
+                    <li>View-only access for shared users</li>
+                    <li>Manage sharing permissions</li>
+                    <li>Revoke access from users</li>
+                    <li>View list of users with access</li>
+                    <li>Notification system for sharing</li>
+                </ul>
+            </div>
+            
+            <div class="flex gap-3 justify-center">
+                <a href="{% url 'master_data:detail' dataset.pk %}" class="btn btn-primary">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+                    </svg>
+                    Back to Dataset Details
+                </a>
+                <a href="{% url 'master_data:list' %}" class="btn btn-outline">View All Datasets</a>
+            </div>
+        </div>
+    </div>
+</div>
 {% endblock %}
