@@ -1,0 +1,17 @@
+{% extends 'base.html' %}
+
+{% block title %}Delete Question{% endblock %}
+
+{% block content %}
+<div class="max-w-2xl">
+    <h1 class="text-2xl font-bold mb-4">Delete Question</h1>
+    <p>Are you sure you want to delete the question:</p>
+    <blockquote class="p-4 my-4 border-l-4 bg-base-200">{{ object.text }}</blockquote>
+
+    <form method="post">
+        {% csrf_token %}
+        <button type="submit" class="btn btn-error">Delete</button>
+        <a href="{% url 'forms:questions' object.form.pk %}" class="btn btn-outline">Cancel</a>
+    </form>
+</div>
+{% endblock %}

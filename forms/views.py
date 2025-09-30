@@ -1,8 +1,9 @@
-from django.shortcuts import render
-from django.views.generic import ListView, CreateView, DetailView, UpdateView
+
+from django.views.generic import ListView, CreateView, DetailView, UpdateView, DeleteView
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib import messages
 from django.urls import reverse_lazy
+ 
 from .models import Form, FormQuestion
 
 class FormListView(LoginRequiredMixin, ListView):
@@ -60,6 +61,39 @@ class FormQuestionEditView(LoginRequiredMixin, DetailView):
     model = Form
     template_name = 'forms/questions.html'
     context_object_name = 'form'
+
+
+class FormQuestionCreateView(LoginRequiredMixin, CreateView):
+    model = FormQuestion
+    fields = ['text', 'question_type', 'options', 'order', 'is_required', 'image']
+    template_name = 'forms/question_form.html'
+
+    def form_valid(self, form):
+        # attach to parent form
+        parent_form = Form.objects.get(pk=self.kwargs.get('pk'))
+        form.instance.form = parent_form
+        messages.success(self.request, 'Question created')
+        return super().form_valid(form)
+
+    def get_success_url(self):
+        return reverse_lazy('forms:questions', kwargs={'pk': self.object.form.pk})
+
+
+class FormQuestionUpdateView(LoginRequiredMixin, UpdateView):
+    model = FormQuestion
+    fields = ['text', 'question_type', 'options', 'order', 'is_required', 'image']
+    template_name = 'forms/question_form.html'
+
+    def get_success_url(self):
+        return reverse_lazy('forms:questions', kwargs={'pk': self.object.form.pk})
+
+
+class FormQuestionDeleteView(LoginRequiredMixin, DeleteView):
+    model = FormQuestion
+    template_name = 'forms/question_confirm_delete.html'
+
+    def get_success_url(self):
+        return reverse_lazy('forms:questions', kwargs={'pk': self.object.form.pk})
 
 class FormPublishView(LoginRequiredMixin, DetailView):
     model = Form

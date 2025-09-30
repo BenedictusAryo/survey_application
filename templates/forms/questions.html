@@ -1,1 +1,52 @@
-{% extends 'base.html' %}{% block content %}<h1>Coming soon: questions</h1>{% endblock %}
+{% extends 'base.html' %}
+
+{% block title %}Manage Questions - {{ form.title }}{% endblock %}
+
+{% block content %}
+<div class="flex justify-between items-center mb-6">
+	<div>
+		<h1 class="text-2xl font-bold">Manage Questions for: {{ form.title }}</h1>
+		<p class="text-gray-600">{{ form.description }}</p>
+	</div>
+	<div>
+		<a href="{% url 'forms:question_add' form.pk %}" class="btn btn-primary btn-sm">Add Question</a>
+		<a href="{% url 'forms:detail' form.pk %}" class="btn btn-outline btn-sm">Back to Form</a>
+	</div>
+</div>
+
+<div class="card bg-base-100 shadow-xl">
+	<div class="card-body">
+		{% if form.questions.all %}
+			<div class="space-y-3">
+				{% for question in form.questions.all %}
+					<div class="p-4 border border-base-300 rounded-lg flex justify-between items-start">
+						<div>
+							<div class="flex items-center gap-2 mb-2">
+								<span class="badge badge-outline">Q{{ question.order }}</span>
+								<span class="badge">{{ question.get_question_type_display }}</span>
+								{% if question.is_required %}
+									<span class="badge badge-error">Required</span>
+								{% endif %}
+							</div>
+							<p class="font-medium">{{ question.text }}</p>
+							{% if question.options %}
+								<p class="text-sm text-gray-500 mt-1">Options: {{ question.options|length }}</p>
+							{% endif %}
+						</div>
+						<div class="flex gap-2">
+							<a href="{% url 'forms:question_edit' question.pk %}" class="btn btn-outline btn-sm">Edit</a>
+							<a href="{% url 'forms:question_delete' question.pk %}" class="btn btn-error btn-sm">Delete</a>
+						</div>
+					</div>
+				{% endfor %}
+			</div>
+		{% else %}
+			<div class="text-center py-8">
+				<p class="text-gray-500 mb-4">No questions added yet.</p>
+				<a href="{% url 'forms:question_add' form.pk %}" class="btn btn-primary btn-sm">Add Your First Question</a>
+			</div>
+		{% endif %}
+	</div>
+</div>
+
+{% endblock %}
