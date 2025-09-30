@@ -5,6 +5,7 @@ from django.contrib import messages
 from django.urls import reverse_lazy
  
 from .models import Form, FormQuestion
+from .forms import FormQuestionForm
 
 class FormListView(LoginRequiredMixin, ListView):
     model = Form
@@ -65,15 +66,46 @@ class FormQuestionEditView(LoginRequiredMixin, DetailView):
 
 class FormQuestionCreateView(LoginRequiredMixin, CreateView):
     model = FormQuestion
-    fields = ['text', 'question_type', 'options', 'order', 'is_required', 'image']
+    form_class = FormQuestionForm
     template_name = 'forms/question_form.html'
 
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        # Add parent form info for the template
+        try:
+            parent_form = Form.objects.get(pk=self.kwargs.get('pk'))
+            context['parent_form'] = parent_form
+        except Form.DoesNotExist:
+            pass
+        return context
+
     def form_valid(self, form):
-        # attach to parent form
+        # Attach to parent form
         parent_form = Form.objects.get(pk=self.kwargs.get('pk'))
         form.instance.form = parent_form
-        messages.success(self.request, 'Question created')
+        
+        # Handle options from POST data
+        options = self._process_options_from_request()
+        form.instance.options = options
+        
+        messages.success(self.request, 'Question created successfully')
         return super().form_valid(form)
+
+    def _process_options_from_request(self):
+        """Process options from the dynamic form data"""
+        options = []
+        option_texts = self.request.POST.getlist('option_text[]')
+        option_values = self.request.POST.getlist('option_value[]')
+        
+        for i, text in enumerate(option_texts):
+            if text.strip():  # Only add non-empty options
+                value = option_values[i] if i < len(option_values) and option_values[i].strip() else text.strip()
+                options.append({
+                    'text': text.strip(),
+                    'value': value.strip()
+                })
+        
+        return options
 
     def get_success_url(self):
         return reverse_lazy('forms:questions', kwargs={'pk': self.object.form.pk})
@@ -81,8 +113,38 @@ class FormQuestionCreateView(LoginRequiredMixin, CreateView):
 
 class FormQuestionUpdateView(LoginRequiredMixin, UpdateView):
     model = FormQuestion
-    fields = ['text', 'question_type', 'options', 'order', 'is_required', 'image']
+    form_class = FormQuestionForm
     template_name = 'forms/question_form.html'
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        # Add parent form info for the template
+        context['parent_form'] = self.object.form
+        return context
+
+    def form_valid(self, form):
+        # Handle options from POST data
+        options = self._process_options_from_request()
+        form.instance.options = options
+        
+        messages.success(self.request, 'Question updated successfully')
+        return super().form_valid(form)
+
+    def _process_options_from_request(self):
+        """Process options from the dynamic form data"""
+        options = []
+        option_texts = self.request.POST.getlist('option_text[]')
+        option_values = self.request.POST.getlist('option_value[]')
+        
+        for i, text in enumerate(option_texts):
+            if text.strip():  # Only add non-empty options
+                value = option_values[i] if i < len(option_values) and option_values[i].strip() else text.strip()
+                options.append({
+                    'text': text.strip(),
+                    'value': value.strip()
+                })
+        
+        return options
 
     def get_success_url(self):
         return reverse_lazy('forms:questions', kwargs={'pk': self.object.form.pk})

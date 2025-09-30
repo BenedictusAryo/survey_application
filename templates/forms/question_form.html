@@ -1,89 +1,165 @@
 {% extends 'base.html' %}
 
-{% block title %}{% if object %}Edit Question{% else %}Add Question{% endif %} - {{ view.kwargs.pk|default:'' }}{% endblock %}
+{% block title %}{% if object %}Edit Question{% else %}Add Question{% endif %}{% endblock %}
+
+{% block extra_head %}
+<style>
+    .options-container {
+        display: none;
+    }
+    .options-container.active {
+        display: block;
+    }
+    .option-item {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        margin-bottom: 0.5rem;
+        padding: 0.5rem;
+        border: 1px solid #e5e7eb;
+        border-radius: 0.5rem;
+        background: #f9fafb;
+    }
+    .option-item:hover {
+        background: #f3f4f6;
+    }
+    .remove-option {
+        color: #ef4444;
+        cursor: pointer;
+        font-size: 1.2rem;
+        font-weight: bold;
+        width: 24px;
+        height: 24px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 50%;
+        background: #fee2e2;
+        transition: all 0.2s;
+    }
+    .remove-option:hover {
+        background: #fecaca;
+        transform: scale(1.1);
+    }
+    .add-option {
+        color: #3b82f6;
+        border: 2px dashed #3b82f6;
+        background: transparent;
+        transition: all 0.2s;
+    }
+    .add-option:hover {
+        background: #dbeafe;
+        border-color: #2563eb;
+    }
+    .question-preview {
+        background: #f8fafc;
+        border: 1px solid #e2e8f0;
+        border-radius: 0.5rem;
+        padding: 1rem;
+        margin-bottom: 1rem;
+    }
+</style>
+{% endblock %}
 
 {% block content %}
 <div class="min-h-[60vh] flex items-center justify-center">
-    <div class="card w-full max-w-3xl shadow-xl bg-base-100">
+    <div class="card w-full max-w-4xl shadow-xl bg-base-100">
         <div class="card-body">
-            <h2 class="card-title text-2xl mb-4">{% if object %}Edit{% else %}Add{% endif %} Question</h2>
+            <h2 class="card-title text-2xl mb-4">
+                {% if object %}Edit{% else %}Add{% endif %} Question
+            </h2>
             
-            <form method="post" enctype="multipart/form-data">
+            <!-- Live Preview -->
+            <div class="question-preview" id="question-preview">
+                <div class="text-lg font-medium mb-2">
+                    <span id="preview-text">Your question will appear here...</span>
+                    <span id="preview-required" class="text-red-500 hidden">*</span>
+                </div>
+                <div id="preview-type" class="text-sm text-gray-500 mb-3">Question Type: Not selected</div>
+                <div id="preview-input" class="text-sm text-gray-400">
+                    Please configure your question above to see the preview
+                </div>
+            </div>
+            
+            <form method="post" enctype="multipart/form-data" id="question-form">
                 {% csrf_token %}
                 
+                <!-- Question Text -->
                 <div class="form-control w-full mb-4">
-                    <label class="label" for="id_text">
+                    <label class="label" for="{{ form.text.id_for_label }}">
                         <span class="label-text">Question Text *</span>
                     </label>
-                    <textarea name="text" id="id_text" class="textarea textarea-bordered w-full" rows="3" required>{{ form.text.value|default:'' }}</textarea>
+                    {{ form.text }}
                     {% if form.text.errors %}
                         <label class="label"><span class="label-text-alt text-error">{{ form.text.errors.0 }}</span></label>
                     {% endif %}
                 </div>
                 
+                <!-- Question Type -->
                 <div class="form-control w-full mb-4">
-                    <label class="label" for="id_question_type">
+                    <label class="label" for="{{ form.question_type.id_for_label }}">
                         <span class="label-text">Question Type *</span>
                     </label>
-                    <select name="question_type" id="id_question_type" class="select select-bordered w-full" required>
-                        <option value="">---------</option>
-                        <option value="single_select" {% if form.question_type.value == 'single_select' %}selected{% endif %}>Single Select</option>
-                        <option value="multi_select" {% if form.question_type.value == 'multi_select' %}selected{% endif %}>Multi Select</option>
-                        <option value="text_input" {% if form.question_type.value == 'text_input' %}selected{% endif %}>Text Input</option>
-                        <option value="numeric_input" {% if form.question_type.value == 'numeric_input' %}selected{% endif %}>Numeric Input</option>
-                        <option value="date_input" {% if form.question_type.value == 'date_input' %}selected{% endif %}>Date Input</option>
-                        <option value="image_prompt" {% if form.question_type.value == 'image_prompt' %}selected{% endif %}>Image Prompt</option>
-                        <option value="image_select" {% if form.question_type.value == 'image_select' %}selected{% endif %}>Image Select (choose from image options)</option>
-                    </select>
+                    {{ form.question_type }}
                     {% if form.question_type.errors %}
                         <label class="label"><span class="label-text-alt text-error">{{ form.question_type.errors.0 }}</span></label>
                     {% endif %}
                 </div>
                 
+                <!-- Options Section (for select questions) -->
+                <div id="options-section" class="options-container mb-4">
+                    <div class="form-control w-full">
+                        <label class="label">
+                            <span class="label-text">Answer Options</span>
+                            <span class="label-text-alt">Add options for your question</span>
+                        </label>
+                        
+                        <div id="options-list">
+                            <!-- Options will be dynamically added here -->
+                        </div>
+                        
+                        <button type="button" id="add-option" class="btn btn-outline add-option btn-sm mt-2">
+                            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+                            </svg>
+                            Add Option
+                        </button>
+                    </div>
+                </div>
+                
+                <!-- Settings Row -->
                 <div class="grid grid-cols-2 gap-4 mb-4">
                     <div class="form-control w-full">
-                        <label class="label" for="id_order">
+                        <label class="label" for="{{ form.order.id_for_label }}">
                             <span class="label-text">Order</span>
                         </label>
-                        <input type="number" name="order" id="id_order" class="input input-bordered w-full" value="{{ form.order.value|default:'0' }}">
+                        {{ form.order }}
                         {% if form.order.errors %}
                             <label class="label"><span class="label-text-alt text-error">{{ form.order.errors.0 }}</span></label>
                         {% endif %}
                     </div>
                     
                     <div class="form-control w-full">
-                        <label class="label cursor-pointer justify-start" for="id_is_required">
-                            <input type="checkbox" name="is_required" id="id_is_required" class="checkbox checkbox-primary mr-3" {% if form.is_required.value %}checked{% endif %}>
-                            <span class="label-text">Required Field</span>
+                        <label class="label cursor-pointer justify-start" for="{{ form.is_required.id_for_label }}">
+                            {{ form.is_required }}
+                            <span class="label-text ml-3">Required Field</span>
                         </label>
                     </div>
                 </div>
                 
+                <!-- Question Image -->
                 <div class="form-control w-full mb-4">
-                    <label class="label" for="id_options">
-                        <span class="label-text">Options (JSON format)</span>
-                    </label>
-                    <textarea name="options" id="id_options" class="textarea textarea-bordered w-full font-mono text-sm" rows="4">{{ form.options.value|default:'[]' }}</textarea>
-                    <label class="label">
-                        <span class="label-text-alt">For single/multi select questions. Format: [{"text": "Option 1", "value": "opt1"}, {"text": "Option 2", "value": "opt2"}]</span>
-                    </label>
-                    {% if form.options.errors %}
-                        <label class="label"><span class="label-text-alt text-error">{{ form.options.errors.0 }}</span></label>
-                    {% endif %}
-                </div>
-                
-                <div class="form-control w-full mb-4">
-                    <label class="label" for="id_image">
+                    <label class="label" for="{{ form.image.id_for_label }}">
                         <span class="label-text">Question Image (optional)</span>
                     </label>
-                    <input type="file" name="image" id="id_image" class="file-input file-input-bordered w-full" accept="image/*">
+                    {{ form.image }}
                     <label class="label">
                         <span class="label-text-alt">Upload an image to display with the question</span>
                     </label>
                     {% if form.image.errors %}
                         <label class="label"><span class="label-text-alt text-error">{{ form.image.errors.0 }}</span></label>
                     {% endif %}
-                    {% if object.image %}
+                    {% if object and object.image %}
                         <div class="mt-2">
                             <img src="{{ object.image.url }}" alt="Current question image" class="max-w-xs rounded-lg shadow-lg">
                             <label class="label">
@@ -100,11 +176,173 @@
                 {% endif %}
                 
                 <div class="card-actions justify-end mt-6">
-                    <a href="{% url 'forms:questions' view.kwargs.pk %}" class="btn btn-outline">Cancel</a>
+                    {% if parent_form %}
+                        <a href="{% url 'forms:questions' parent_form.pk %}" class="btn btn-outline">Cancel</a>
+                    {% elif object %}
+                        <a href="{% url 'forms:questions' object.form.pk %}" class="btn btn-outline">Cancel</a>
+                    {% else %}
+                        <a href="javascript:history.back()" class="btn btn-outline">Cancel</a>
+                    {% endif %}
                     <button type="submit" class="btn btn-primary">Save Question</button>
                 </div>
             </form>
         </div>
     </div>
 </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const questionTypeSelect = document.getElementById('id_question_type');
+    const optionsSection = document.getElementById('options-section');
+    const optionsList = document.getElementById('options-list');
+    const addOptionBtn = document.getElementById('add-option');
+    const questionText = document.getElementById('id_text');
+    const isRequired = document.getElementById('id_is_required');
+    
+    // Preview elements
+    const previewText = document.getElementById('preview-text');
+    const previewType = document.getElementById('preview-type');
+    const previewRequired = document.getElementById('preview-required');
+    const previewInput = document.getElementById('preview-input');
+    
+    let optionCount = 0;
+    
+    // Question types that require options
+    const optionRequiredTypes = ['single_select', 'multi_select', 'image_select'];
+    
+    // Initialize existing options for edit mode
+    {% if object and object.options %}
+        try {
+            const existingOptions = JSON.parse('{{ object.options|escapejs }}');
+            existingOptions.forEach(option => {
+                addOption(option.text || '', option.value || '');
+            });
+        } catch (e) {
+            console.log('No existing options to load');
+        }
+    {% endif %}
+    
+    // Show/hide options based on question type
+    function toggleOptionsSection() {
+        const questionType = questionTypeSelect.value;
+        if (optionRequiredTypes.includes(questionType)) {
+            optionsSection.classList.add('active');
+            // Add default options if none exist
+            if (optionsList.children.length === 0) {
+                addOption('Option 1', '');
+                addOption('Option 2', '');
+            }
+        } else {
+            optionsSection.classList.remove('active');
+        }
+        updatePreview();
+    }
+    
+    // Add a new option
+    function addOption(text = '', value = '') {
+        optionCount++;
+        const optionDiv = document.createElement('div');
+        optionDiv.className = 'option-item';
+        optionDiv.innerHTML = `
+            <span class="w-6 text-center text-gray-400">${optionCount}.</span>
+            <input type="text" name="option_text[]" value="${text}" placeholder="Option text" 
+                   class="input input-bordered input-sm flex-1" required>
+            <input type="text" name="option_value[]" value="${value}" placeholder="Value (optional)" 
+                   class="input input-bordered input-sm w-32">
+            <span class="remove-option" onclick="removeOption(this)" title="Remove option">×</span>
+        `;
+        optionsList.appendChild(optionDiv);
+        
+        // Add event listeners for live preview
+        const textInput = optionDiv.querySelector('input[name="option_text[]"]');
+        const valueInput = optionDiv.querySelector('input[name="option_value[]"]');
+        textInput.addEventListener('input', updatePreview);
+        valueInput.addEventListener('input', updatePreview);
+        
+        updatePreview();
+    }
+    
+    // Remove an option
+    window.removeOption = function(button) {
+        button.parentElement.remove();
+        updateOptionNumbers();
+        updatePreview();
+    };
+    
+    // Update option numbers
+    function updateOptionNumbers() {
+        const options = optionsList.querySelectorAll('.option-item');
+        options.forEach((option, index) => {
+            option.querySelector('span').textContent = `${index + 1}.`;
+        });
+    }
+    
+    // Update live preview
+    function updatePreview() {
+        const questionType = questionTypeSelect.value;
+        const text = questionText.value.trim() || 'Your question will appear here...';
+        const required = isRequired.checked;
+        
+        previewText.textContent = text;
+        previewRequired.classList.toggle('hidden', !required);
+        
+        if (questionType) {
+            const typeDisplay = questionTypeSelect.options[questionTypeSelect.selectedIndex].text;
+            previewType.textContent = `Question Type: ${typeDisplay}`;
+            
+            // Generate preview input based on type
+            let inputPreview = '';
+            switch (questionType) {
+                case 'text_input':
+                    inputPreview = '<input type="text" class="input input-bordered w-full" placeholder="Text input field" disabled>';
+                    break;
+                case 'numeric_input':
+                    inputPreview = '<input type="number" class="input input-bordered w-full" placeholder="Number input field" disabled>';
+                    break;
+                case 'date_input':
+                    inputPreview = '<input type="date" class="input input-bordered w-full" disabled>';
+                    break;
+                case 'image_prompt':
+                    inputPreview = '<div class="text-gray-500">Image will be displayed here</div>';
+                    break;
+                case 'single_select':
+                case 'multi_select':
+                case 'image_select':
+                    const options = Array.from(optionsList.querySelectorAll('input[name="option_text[]"]'))
+                        .map(input => input.value.trim())
+                        .filter(value => value);
+                    
+                    if (options.length > 0) {
+                        const inputType = questionType === 'multi_select' ? 'checkbox' : 'radio';
+                        inputPreview = options.map(option => `
+                            <label class="flex items-center gap-2 mb-1">
+                                <input type="${inputType}" name="preview" disabled class="${inputType}">
+                                <span>${option}</span>
+                            </label>
+                        `).join('');
+                    } else {
+                        inputPreview = '<div class="text-gray-400">Add options to see preview</div>';
+                    }
+                    break;
+                default:
+                    inputPreview = '<div class="text-gray-400">Please select a question type</div>';
+            }
+            previewInput.innerHTML = inputPreview;
+        } else {
+            previewType.textContent = 'Question Type: Not selected';
+            previewInput.innerHTML = '<div class="text-gray-400">Please select a question type</div>';
+        }
+    }
+    
+    // Event listeners
+    questionTypeSelect.addEventListener('change', toggleOptionsSection);
+    addOptionBtn.addEventListener('click', () => addOption());
+    questionText.addEventListener('input', updatePreview);
+    isRequired.addEventListener('change', updatePreview);
+    
+    // Initialize
+    toggleOptionsSection();
+    updatePreview();
+});
+</script>
 {% endblock %}
