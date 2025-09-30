@@ -3,18 +3,108 @@
 {% block title %}{% if object %}Edit Question{% else %}Add Question{% endif %} - {{ view.kwargs.pk|default:'' }}{% endblock %}
 
 {% block content %}
-<div class="max-w-3xl">
-    <h1 class="text-2xl font-bold mb-4">{% if object %}Edit{% else %}Add{% endif %} Question</h1>
-
-    <form method="post" enctype="multipart/form-data">
-        {% csrf_token %}
-        <div class="space-y-4">
-            {{ form.as_p }}
+<div class="min-h-[60vh] flex items-center justify-center">
+    <div class="card w-full max-w-3xl shadow-xl bg-base-100">
+        <div class="card-body">
+            <h2 class="card-title text-2xl mb-4">{% if object %}Edit{% else %}Add{% endif %} Question</h2>
+            
+            <form method="post" enctype="multipart/form-data">
+                {% csrf_token %}
+                
+                <div class="form-control w-full mb-4">
+                    <label class="label" for="id_text">
+                        <span class="label-text">Question Text *</span>
+                    </label>
+                    <textarea name="text" id="id_text" class="textarea textarea-bordered w-full" rows="3" required>{{ form.text.value|default:'' }}</textarea>
+                    {% if form.text.errors %}
+                        <label class="label"><span class="label-text-alt text-error">{{ form.text.errors.0 }}</span></label>
+                    {% endif %}
+                </div>
+                
+                <div class="form-control w-full mb-4">
+                    <label class="label" for="id_question_type">
+                        <span class="label-text">Question Type *</span>
+                    </label>
+                    <select name="question_type" id="id_question_type" class="select select-bordered w-full" required>
+                        <option value="">---------</option>
+                        <option value="single_select" {% if form.question_type.value == 'single_select' %}selected{% endif %}>Single Select</option>
+                        <option value="multi_select" {% if form.question_type.value == 'multi_select' %}selected{% endif %}>Multi Select</option>
+                        <option value="text_input" {% if form.question_type.value == 'text_input' %}selected{% endif %}>Text Input</option>
+                        <option value="numeric_input" {% if form.question_type.value == 'numeric_input' %}selected{% endif %}>Numeric Input</option>
+                        <option value="date_input" {% if form.question_type.value == 'date_input' %}selected{% endif %}>Date Input</option>
+                        <option value="image_prompt" {% if form.question_type.value == 'image_prompt' %}selected{% endif %}>Image Prompt</option>
+                        <option value="image_select" {% if form.question_type.value == 'image_select' %}selected{% endif %}>Image Select (choose from image options)</option>
+                    </select>
+                    {% if form.question_type.errors %}
+                        <label class="label"><span class="label-text-alt text-error">{{ form.question_type.errors.0 }}</span></label>
+                    {% endif %}
+                </div>
+                
+                <div class="grid grid-cols-2 gap-4 mb-4">
+                    <div class="form-control w-full">
+                        <label class="label" for="id_order">
+                            <span class="label-text">Order</span>
+                        </label>
+                        <input type="number" name="order" id="id_order" class="input input-bordered w-full" value="{{ form.order.value|default:'0' }}">
+                        {% if form.order.errors %}
+                            <label class="label"><span class="label-text-alt text-error">{{ form.order.errors.0 }}</span></label>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="form-control w-full">
+                        <label class="label cursor-pointer justify-start" for="id_is_required">
+                            <input type="checkbox" name="is_required" id="id_is_required" class="checkbox checkbox-primary mr-3" {% if form.is_required.value %}checked{% endif %}>
+                            <span class="label-text">Required Field</span>
+                        </label>
+                    </div>
+                </div>
+                
+                <div class="form-control w-full mb-4">
+                    <label class="label" for="id_options">
+                        <span class="label-text">Options (JSON format)</span>
+                    </label>
+                    <textarea name="options" id="id_options" class="textarea textarea-bordered w-full font-mono text-sm" rows="4">{{ form.options.value|default:'[]' }}</textarea>
+                    <label class="label">
+                        <span class="label-text-alt">For single/multi select questions. Format: [{"text": "Option 1", "value": "opt1"}, {"text": "Option 2", "value": "opt2"}]</span>
+                    </label>
+                    {% if form.options.errors %}
+                        <label class="label"><span class="label-text-alt text-error">{{ form.options.errors.0 }}</span></label>
+                    {% endif %}
+                </div>
+                
+                <div class="form-control w-full mb-4">
+                    <label class="label" for="id_image">
+                        <span class="label-text">Question Image (optional)</span>
+                    </label>
+                    <input type="file" name="image" id="id_image" class="file-input file-input-bordered w-full" accept="image/*">
+                    <label class="label">
+                        <span class="label-text-alt">Upload an image to display with the question</span>
+                    </label>
+                    {% if form.image.errors %}
+                        <label class="label"><span class="label-text-alt text-error">{{ form.image.errors.0 }}</span></label>
+                    {% endif %}
+                    {% if object.image %}
+                        <div class="mt-2">
+                            <img src="{{ object.image.url }}" alt="Current question image" class="max-w-xs rounded-lg shadow-lg">
+                            <label class="label">
+                                <span class="label-text-alt">Current image (upload new to replace)</span>
+                            </label>
+                        </div>
+                    {% endif %}
+                </div>
+                
+                {% if form.non_field_errors %}
+                    <div class="alert alert-error mb-4">
+                        {{ form.non_field_errors.0 }}
+                    </div>
+                {% endif %}
+                
+                <div class="card-actions justify-end mt-6">
+                    <a href="{% url 'forms:questions' view.kwargs.pk %}" class="btn btn-outline">Cancel</a>
+                    <button type="submit" class="btn btn-primary">Save Question</button>
+                </div>
+            </form>
         </div>
-        <div class="mt-4">
-            <button type="submit" class="btn btn-primary">Save</button>
-            <a href="{% url 'forms:questions' view.kwargs.pk %}" class="btn btn-outline">Cancel</a>
-        </div>
-    </form>
+    </div>
 </div>
 {% endblock %}
