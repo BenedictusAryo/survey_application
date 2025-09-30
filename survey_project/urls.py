@@ -27,4 +27,5 @@ urlpatterns = [
     path('master-data/', include('master_data.urls')),
     path('forms/', include('forms.urls')),
     path('survey/', include('responses.urls')),  # Public survey URLs
+    path('captcha/', include('captcha.urls')),  # Captcha URLs
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

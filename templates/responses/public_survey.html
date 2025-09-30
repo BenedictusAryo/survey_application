@@ -1,1 +1,303 @@
-{% extends 'base.html' %}{% block content %}<h1>Coming soon: public_survey</h1>{% endblock %}
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ survey_form.title }}{% endblock %}
+
+{% block extra_head %}
+<style>
+    /* Custom styles for survey form */
+    .survey-container {
+        max-width: 800px;
+        margin: 0 auto;
+        padding: 1rem;
+    }
+    
+    .question-card {
+        background: white;
+        border-radius: 0.5rem;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        margin-bottom: 1.5rem;
+        padding: 1.5rem;
+    }
+    
+    .question-image {
+        max-width: 100%;
+        border-radius: 0.5rem;
+        margin-bottom: 1rem;
+    }
+    
+    .option-with-image {
+        display: flex;
+        align-items: center;
+        margin-bottom: 0.5rem;
+        padding: 0.5rem;
+        border: 1px solid #e5e7eb;
+        border-radius: 0.5rem;
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+    
+    .option-with-image:hover {
+        background: #f9fafb;
+        border-color: #3b82f6;
+    }
+    
+    .option-image {
+        width: 60px;
+        height: 60px;
+        object-fit: cover;
+        border-radius: 0.25rem;
+        margin-right: 1rem;
+    }
+    
+    .identity-section {
+        background: #f0f9ff;
+        border: 1px solid #0ea5e9;
+        border-radius: 0.5rem;
+        padding: 1.5rem;
+        margin-bottom: 2rem;
+    }
+    
+    .required-indicator {
+        color: #ef4444;
+        font-weight: bold;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="survey-container">
+    {% if require_password %}
+        <!-- Password Protection -->
+        <div class="card bg-base-100 shadow-xl max-w-md mx-auto">
+            <div class="card-body text-center">
+                <h2 class="card-title justify-center">🔒 Protected Survey</h2>
+                <p class="text-gray-600 mb-4">This survey is password protected. Please enter the password to continue.</p>
+                
+                <form method="post">
+                    {% csrf_token %}
+                    <div class="form-control w-full mb-4">
+                        {{ password_form.password }}
+                    </div>
+                    <button type="submit" class="btn btn-primary w-full">Access Survey</button>
+                </form>
+            </div>
+        </div>
+    {% else %}
+        <!-- Survey Form -->
+        <div class="text-center mb-8">
+            {% if survey_form.form_image %}
+                <img src="{{ survey_form.form_image.url }}" alt="Form Header" class="w-full max-w-md mx-auto rounded-lg shadow-md mb-4">
+            {% endif %}
+            
+            <h1 class="text-4xl font-bold text-primary mb-2">{{ survey_form.title }}</h1>
+            {% if survey_form.description %}
+                <p class="text-lg text-gray-600 mb-4">{{ survey_form.description }}</p>
+            {% endif %}
+            
+            <div class="divider"></div>
+        </div>
+
+        {% if master_data_attachments %}
+            <!-- Identity Selection Section -->
+            <div class="identity-section" id="identity-section">
+                <h2 class="text-xl font-bold mb-4">📋 Identity Information</h2>
+                <p class="text-sm text-gray-600 mb-4">Please select your identity from the database to avoid re-entering your information.</p>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {% for attachment in master_data_attachments %}
+                        <div class="form-control">
+                            <label class="label">
+                                <span class="label-text font-medium">{{ attachment.dataset.name }}</span>
+                            </label>
+                            <select class="select select-bordered w-full" id="dataset_{{ attachment.dataset.id }}">
+                                <option value="">-- Select from {{ attachment.dataset.name }} --</option>
+                                {% for record in attachment.dataset.records.all %}
+                                    <option value="{{ record.id }}">{{ record }}</option>
+                                {% endfor %}
+                                <option value="other">🆕 Other (not in list)</option>
+                            </select>
+                        </div>
+                    {% endfor %}
+                </div>
+            </div>
+        {% endif %}
+
+        <!-- Survey Questions -->
+        <form method="post" enctype="multipart/form-data" id="survey-form">
+            {% csrf_token %}
+            
+            {% for question in questions %}
+                <div class="question-card" data-question-id="{{ question.id }}">
+                    <!-- Question Header -->
+                    <div class="flex items-start mb-4">
+                        <span class="text-lg font-medium flex-1">
+                            {{ forloop.counter }}. {{ question.text }}
+                            {% if question.is_required %}
+                                <span class="required-indicator">*</span>
+                            {% endif %}
+                        </span>
+                        <span class="badge badge-outline text-xs">{{ question.get_question_type_display }}</span>
+                    </div>
+                    
+                    <!-- Question Image -->
+                    {% if question.image %}
+                        <img src="{{ question.image.url }}" alt="Question Image" class="question-image">
+                    {% endif %}
+                    
+                    <!-- Question Input -->
+                    <div class="form-control w-full">
+                        {% if question.question_type == 'text_input' %}
+                            <input type="text" name="question_{{ question.id }}" 
+                                   class="input input-bordered w-full" 
+                                   placeholder="Your answer..."
+                                   {% if question.is_required %}required{% endif %}>
+                                   
+                        {% elif question.question_type == 'numeric_input' %}
+                            <input type="number" name="question_{{ question.id }}" 
+                                   class="input input-bordered w-full" 
+                                   placeholder="Enter a number..."
+                                   {% if question.is_required %}required{% endif %}>
+                                   
+                        {% elif question.question_type == 'date_input' %}
+                            <input type="date" name="question_{{ question.id }}" 
+                                   class="input input-bordered w-full"
+                                   {% if question.is_required %}required{% endif %}>
+                                   
+                        {% elif question.question_type == 'single_select' %}
+                            <div class="space-y-2">
+                                {% for option in question.options %}
+                                    <label class="cursor-pointer flex items-center space-x-2">
+                                        <input type="radio" name="question_{{ question.id }}" 
+                                               value="{{ option.value }}" class="radio radio-primary"
+                                               {% if question.is_required %}required{% endif %}>
+                                        <span>{{ option.text }}</span>
+                                    </label>
+                                {% endfor %}
+                                <label class="cursor-pointer flex items-center space-x-2">
+                                    <input type="radio" name="question_{{ question.id }}" 
+                                           value="other" class="radio radio-primary">
+                                    <span>Other:</span>
+                                    <input type="text" placeholder="Please specify..." 
+                                           class="input input-bordered input-sm flex-1 ml-2"
+                                           onchange="this.previousElementSibling.previousElementSibling.value = this.value">
+                                </label>
+                            </div>
+                            
+                        {% elif question.question_type == 'multi_select' %}
+                            <div class="space-y-2">
+                                {% for option in question.options %}
+                                    <label class="cursor-pointer flex items-center space-x-2">
+                                        <input type="checkbox" name="question_{{ question.id }}" 
+                                               value="{{ option.value }}" class="checkbox checkbox-primary">
+                                        <span>{{ option.text }}</span>
+                                    </label>
+                                {% endfor %}
+                                <label class="cursor-pointer flex items-center space-x-2">
+                                    <input type="checkbox" name="question_{{ question.id }}" 
+                                           value="other" class="checkbox checkbox-primary">
+                                    <span>Other:</span>
+                                    <input type="text" placeholder="Please specify..." 
+                                           class="input input-bordered input-sm flex-1 ml-2"
+                                           onchange="this.previousElementSibling.previousElementSibling.value = this.value">
+                                </label>
+                            </div>
+                            
+                        {% elif question.question_type == 'image_select' %}
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                                {% for option in question.options %}
+                                    <label class="option-with-image">
+                                        <input type="radio" name="question_{{ question.id }}" 
+                                               value="{{ option.value }}" class="radio radio-primary"
+                                               {% if question.is_required %}required{% endif %}>
+                                        {% if option.image %}
+                                            <img src="{{ option.image }}" alt="{{ option.text }}" class="option-image">
+                                        {% endif %}
+                                        <span class="flex-1">{{ option.text }}</span>
+                                    </label>
+                                {% endfor %}
+                            </div>
+                            
+                        {% elif question.question_type == 'image_prompt' %}
+                            <textarea name="question_{{ question.id }}" 
+                                      class="textarea textarea-bordered w-full" 
+                                      rows="4" 
+                                      placeholder="Please describe what you see or provide your response..."
+                                      {% if question.is_required %}required{% endif %}></textarea>
+                        {% endif %}
+                    </div>
+                </div>
+            {% endfor %}
+            
+            <!-- Captcha -->
+            {% if survey_form.require_captcha %}
+                <div class="question-card">
+                    <h3 class="text-lg font-medium mb-4">🔐 Security Verification</h3>
+                    <div class="form-control">
+                        {{ form.captcha.label_tag }}
+                        {{ form.captcha }}
+                        {% if form.captcha.errors %}
+                            <div class="text-error text-sm mt-1">{{ form.captcha.errors.0 }}</div>
+                        {% endif %}
+                    </div>
+                </div>
+            {% endif %}
+            
+            <!-- Submit Button -->
+            <div class="text-center py-8">
+                <button type="submit" class="btn btn-primary btn-lg min-w-48">
+                    📤 Submit Survey
+                </button>
+                <p class="text-sm text-gray-500 mt-2">
+                    Your response will be recorded anonymously.
+                </p>
+            </div>
+        </form>
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+// Handle conditional logic and other form interactions
+document.addEventListener('DOMContentLoaded', function() {
+    // Identity selection handling
+    const identitySelects = document.querySelectorAll('[id^="dataset_"]');
+    identitySelects.forEach(select => {
+        select.addEventListener('change', function() {
+            if (this.value === 'other') {
+                // Show additional form fields for new identity
+                console.log('Show identity form for new entry');
+            } else if (this.value) {
+                // Load identity data
+                console.log('Load identity data for record:', this.value);
+            }
+        });
+    });
+    
+    // Form validation
+    const form = document.getElementById('survey-form');
+    if (form) {
+        form.addEventListener('submit', function(e) {
+            // Add any custom validation here
+            const requiredFields = form.querySelectorAll('[required]');
+            let isValid = true;
+            
+            requiredFields.forEach(field => {
+                if (!field.value.trim()) {
+                    isValid = false;
+                    field.classList.add('input-error');
+                } else {
+                    field.classList.remove('input-error');
+                }
+            });
+            
+            if (!isValid) {
+                e.preventDefault();
+                alert('Please fill in all required fields.');
+            }
+        });
+    }
+});
+</script>
+{% endblock %}

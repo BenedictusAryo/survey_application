@@ -23,8 +23,15 @@ class Form(models.Model):
     owner = models.ForeignKey(django_settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='owned_forms')
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='draft')
     
+    # Security settings
+    password = models.CharField(max_length=100, blank=True, help_text="Optional password to protect the form")
+    require_captcha = models.BooleanField(default=True, help_text="Require captcha for submissions")
+    
     # Settings stored as JSON
-    form_settings = models.JSONField(default=dict)  # Renamed to avoid conflict
+    form_settings = models.JSONField(default=dict)  # For unique_entries, enable_identity, etc.
+    
+    # Form image/logo
+    form_image = models.ImageField(upload_to='form_images/', blank=True, null=True, help_text="Header image for the form")
     
     # QR Code
     qr_code = models.ImageField(upload_to='qr_codes/', blank=True, null=True)
@@ -108,23 +115,43 @@ class FormQuestion(models.Model):
         ('numeric_input', 'Numeric Input'),
         ('date_input', 'Date Input'),
         ('image_prompt', 'Image Prompt'),
+        ('image_select', 'Image Select (choose from image options)'),
     ]
     
     form = models.ForeignKey(Form, on_delete=models.CASCADE, related_name='questions')
     text = models.TextField()
     question_type = models.CharField(max_length=20, choices=QUESTION_TYPES)
-    options = models.JSONField(default=list)  # For select options
+    options = models.JSONField(default=list)  # For select options, can include image URLs
     order = models.PositiveIntegerField(default=0)
     is_required = models.BooleanField(default=False)
     
     # Conditional logic
     logic = models.JSONField(default=dict)  # Show/hide conditions
     
-    # Image for image prompts
-    image = models.ImageField(upload_to='question_images/', blank=True, null=True)
+    # Image for the question itself
+    image = models.ImageField(upload_to='question_images/', blank=True, null=True, 
+                             help_text="Image to display with the question")
     
     class Meta:
         ordering = ['order', 'id']
     
     def __str__(self):
         return f"{self.form.title} - Q{self.order}: {self.text[:50]}"
+
+
+class QuestionOption(models.Model):
+    """Individual option for select questions, supporting images"""
+    
+    question = models.ForeignKey(FormQuestion, on_delete=models.CASCADE, related_name='option_images')
+    text = models.CharField(max_length=200)
+    value = models.CharField(max_length=200)
+    image = models.ImageField(upload_to='option_images/', blank=True, null=True,
+                             help_text="Optional image for this option")
+    order = models.PositiveIntegerField(default=0)
+    
+    class Meta:
+        ordering = ['order', 'id']
+        unique_together = ['question', 'value']
+    
+    def __str__(self):
+        return f"{self.question} - {self.text}"
