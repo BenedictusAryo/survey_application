@@ -28,6 +28,24 @@ class FormDetailView(LoginRequiredMixin, DetailView):
     model = Form
     template_name = 'forms/detail.html'
     context_object_name = 'form'
+    
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        form_obj = self.object
+        
+        # Get attached master data sets
+        context['master_data_attachments'] = form_obj.master_data_attachments.select_related('dataset').all()
+        
+        # Get questions
+        context['questions'] = form_obj.questions.all()
+        
+        # Get response count
+        context['response_count'] = form_obj.responses.count()
+        
+        # Get collaborators
+        context['collaborators'] = form_obj.editors.all()
+        
+        return context
 
 class FormEditView(LoginRequiredMixin, UpdateView):
     model = Form
