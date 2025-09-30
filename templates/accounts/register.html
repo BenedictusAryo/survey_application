@@ -1,0 +1,98 @@
+{% extends 'base.html' %}
+
+{% block title %}Register - Survey Application{% endblock %}
+
+{% block content %}
+<div class="min-h-[60vh] flex items-center justify-center">
+    <div class="card w-full max-w-md shadow-xl bg-base-100">
+        <div class="card-body">
+            <h2 class="card-title justify-center text-2xl mb-4">Register</h2>
+            
+            <form method="post">
+                {% csrf_token %}
+                
+                <div class="form-control w-full">
+                    <label class="label" for="id_username">
+                        <span class="label-text">Username</span>
+                    </label>
+                    <input type="text" name="username" id="id_username" class="input input-bordered w-full" value="{{ form.username.value|default:'' }}" required>
+                    {% if form.username.errors %}
+                        <label class="label"><span class="label-text-alt text-error">{{ form.username.errors.0 }}</span></label>
+                    {% endif %}
+                </div>
+                
+                <div class="form-control w-full">
+                    <label class="label" for="id_email">
+                        <span class="label-text">Email</span>
+                    </label>
+                    <input type="email" name="email" id="id_email" class="input input-bordered w-full" value="{{ form.email.value|default:'' }}" required>
+                    {% if form.email.errors %}
+                        <label class="label"><span class="label-text-alt text-error">{{ form.email.errors.0 }}</span></label>
+                    {% endif %}
+                </div>
+                
+                <div class="grid grid-cols-2 gap-2">
+                    <div class="form-control w-full">
+                        <label class="label" for="id_first_name">
+                            <span class="label-text">First Name</span>
+                        </label>
+                        <input type="text" name="first_name" id="id_first_name" class="input input-bordered w-full" value="{{ form.first_name.value|default:'' }}">
+                    </div>
+                    
+                    <div class="form-control w-full">
+                        <label class="label" for="id_last_name">
+                            <span class="label-text">Last Name</span>
+                        </label>
+                        <input type="text" name="last_name" id="id_last_name" class="input input-bordered w-full" value="{{ form.last_name.value|default:'' }}">
+                    </div>
+                </div>
+                
+                <div class="form-control w-full">
+                    <label class="label" for="id_role">
+                        <span class="label-text">Role</span>
+                    </label>
+                    <select name="role" id="id_role" class="select select-bordered w-full">
+                        <option value="form_creator" {% if form.role.value == 'form_creator' %}selected{% endif %}>Form Creator</option>
+                        <option value="editor" {% if form.role.value == 'editor' %}selected{% endif %}>Editor</option>
+                        <option value="respondent" {% if form.role.value == 'respondent' %}selected{% endif %}>Respondent</option>
+                    </select>
+                </div>
+                
+                <div class="form-control w-full">
+                    <label class="label" for="id_password">
+                        <span class="label-text">Password</span>
+                    </label>
+                    <input type="password" name="password" id="id_password" class="input input-bordered w-full" required>
+                    {% if form.password.errors %}
+                        <label class="label"><span class="label-text-alt text-error">{{ form.password.errors.0 }}</span></label>
+                    {% endif %}
+                </div>
+                
+                <div class="form-control w-full">
+                    <label class="label" for="id_password_confirm">
+                        <span class="label-text">Confirm Password</span>
+                    </label>
+                    <input type="password" name="password_confirm" id="id_password_confirm" class="input input-bordered w-full" required>
+                    {% if form.password_confirm.errors %}
+                        <label class="label"><span class="label-text-alt text-error">{{ form.password_confirm.errors.0 }}</span></label>
+                    {% endif %}
+                </div>
+                
+                {% if form.non_field_errors %}
+                    <div class="alert alert-error mt-4">
+                        {{ form.non_field_errors.0 }}
+                    </div>
+                {% endif %}
+                
+                <div class="form-control mt-6">
+                    <button type="submit" class="btn btn-primary">Register</button>
+                </div>
+                
+                <div class="text-center mt-4">
+                    <p class="text-sm">Already have an account? <a href="{% url 'accounts:login' %}" class="link link-primary">Login here</a></p>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

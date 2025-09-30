@@ -1,0 +1,39 @@
+{% extends 'base.html' %}
+
+{% block title %}Login - Survey Application{% endblock %}
+
+{% block content %}
+<div class="min-h-[60vh] flex items-center justify-center">
+    <div class="card w-full max-w-md shadow-xl bg-base-100">
+        <div class="card-body">
+            <h2 class="card-title justify-center text-2xl mb-4">Login</h2>
+            
+            <form method="post">
+                {% csrf_token %}
+                
+                <div class="form-control w-full">
+                    <label class="label" for="id_username">
+                        <span class="label-text">Username</span>
+                    </label>
+                    <input type="text" name="username" id="id_username" class="input input-bordered w-full" required>
+                </div>
+                
+                <div class="form-control w-full">
+                    <label class="label" for="id_password">
+                        <span class="label-text">Password</span>
+                    </label>
+                    <input type="password" name="password" id="id_password" class="input input-bordered w-full" required>
+                </div>
+                
+                <div class="form-control mt-6">
+                    <button type="submit" class="btn btn-primary">Login</button>
+                </div>
+                
+                <div class="text-center mt-4">
+                    <p class="text-sm">Don't have an account? <a href="{% url 'accounts:register' %}" class="link link-primary">Register here</a></p>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

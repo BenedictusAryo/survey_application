@@ -1,0 +1,29 @@
+{% extends 'base.html' %}
+
+{% block title %}Master Data - Survey Application{% endblock %}
+
+{% block content %}
+<div class="flex justify-between items-center mb-6">
+    <h1 class="text-3xl font-bold">Master Data Sets</h1>
+    <a href="{% url 'master_data:create' %}" class="btn btn-primary">Create New Dataset</a>
+</div>
+
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+    {% for dataset in datasets %}
+        <div class="card bg-base-100 shadow-xl">
+            <div class="card-body">
+                <h2 class="card-title">{{ dataset.name }}</h2>
+                <p>{{ dataset.description|truncatewords:20 }}</p>
+                <div class="card-actions justify-end">
+                    <a href="{% url 'master_data:detail' dataset.pk %}" class="btn btn-primary btn-sm">View</a>
+                </div>
+            </div>
+        </div>
+    {% empty %}
+        <div class="col-span-full text-center py-12">
+            <p class="text-lg text-gray-600">No master data sets yet.</p>
+            <a href="{% url 'master_data:create' %}" class="btn btn-primary mt-4">Create Your First Dataset</a>
+        </div>
+    {% endfor %}
+</div>
+{% endblock %}
