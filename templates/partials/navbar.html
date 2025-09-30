@@ -1,0 +1,48 @@
+<div class="navbar bg-primary text-primary-content shadow-lg">
+    <div class="navbar-start">
+        <div class="dropdown">
+            <div tabindex="0" role="button" class="btn btn-ghost lg:hidden">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h8m-8 6h16"></path>
+                </svg>
+            </div>
+            <ul tabindex="0" class="menu menu-sm dropdown-content mt-3 z-[1] p-2 shadow bg-base-100 rounded-box w-52 text-base-content">
+                {% if user.is_authenticated and user.is_form_creator %}
+                    <li><a href="{% url 'master_data:list' %}">Master Data</a></li>
+                    <li><a href="{% url 'forms:list' %}">Forms</a></li>
+                {% endif %}
+            </ul>
+        </div>
+        <a class="btn btn-ghost normal-case text-xl" href="{% url 'home' %}">Survey App</a>
+    </div>
+    
+    <div class="navbar-center hidden lg:flex">
+        <ul class="menu menu-horizontal px-1">
+            {% if user.is_authenticated and user.is_form_creator %}
+                <li><a href="{% url 'master_data:list' %}">Master Data</a></li>
+                <li><a href="{% url 'forms:list' %}">Forms</a></li>
+            {% endif %}
+        </ul>
+    </div>
+    
+    <div class="navbar-end">
+        {% if user.is_authenticated %}
+            <div class="dropdown dropdown-end">
+                <div tabindex="0" role="button" class="btn btn-ghost">
+                    <div class="avatar placeholder">
+                        <div class="bg-neutral-focus text-neutral-content rounded-full w-8">
+                            <span class="text-xs">{{ user.username|first|upper }}</span>
+                        </div>
+                    </div>
+                </div>
+                <ul tabindex="0" class="menu menu-sm dropdown-content mt-3 z-[1] p-2 shadow bg-base-100 rounded-box w-52 text-base-content">
+                    <li><a href="{% url 'accounts:profile' %}">Profile</a></li>
+                    <li><a href="{% url 'accounts:logout' %}">Logout</a></li>
+                </ul>
+            </div>
+        {% else %}
+            <a class="btn btn-ghost" href="{% url 'accounts:login' %}">Login</a>
+            <a class="btn btn-secondary" href="{% url 'accounts:register' %}">Register</a>
+        {% endif %}
+    </div>
+</div>

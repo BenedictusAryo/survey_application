@@ -1,0 +1,63 @@
+{% extends 'base.html' %}
+
+{% block title %}Home - Survey Application{% endblock %}
+
+{% block content %}
+<div class="hero min-h-[60vh] bg-base-200 rounded-lg">
+    <div class="hero-content text-center">
+        <div class="max-w-md">
+            <h1 class="text-5xl font-bold">Survey App</h1>
+            <p class="py-6">Create forms with reusable master data. Build surveys like Google Forms, but smarter - eliminate repetitive data entry with centralized identity records.</p>
+            
+            {% if user.is_authenticated %}
+                <div class="space-y-2">
+                    {% if user.is_form_creator %}
+                        <a href="{% url 'forms:create' %}" class="btn btn-primary">Create New Form</a>
+                        <a href="{% url 'master_data:create' %}" class="btn btn-secondary">Create Master Data</a>
+                    {% else %}
+                        <p class="text-sm">You have limited access. Contact administrator for form creation privileges.</p>
+                    {% endif %}
+                </div>
+            {% else %}
+                <a href="{% url 'accounts:register' %}" class="btn btn-primary">Get Started</a>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+{% if user.is_authenticated %}
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mt-8">
+    {% if user.is_form_creator %}
+        <div class="card bg-base-100 shadow-xl">
+            <div class="card-body">
+                <h2 class="card-title">Master Data</h2>
+                <p>Create and manage reusable data sets for your forms.</p>
+                <div class="card-actions justify-end">
+                    <a href="{% url 'master_data:list' %}" class="btn btn-primary">Manage</a>
+                </div>
+            </div>
+        </div>
+        
+        <div class="card bg-base-100 shadow-xl">
+            <div class="card-body">
+                <h2 class="card-title">Forms</h2>
+                <p>Build and publish surveys with conditional logic.</p>
+                <div class="card-actions justify-end">
+                    <a href="{% url 'forms:list' %}" class="btn btn-primary">Manage</a>
+                </div>
+            </div>
+        </div>
+    {% endif %}
+    
+    <div class="card bg-base-100 shadow-xl">
+        <div class="card-body">
+            <h2 class="card-title">Profile</h2>
+            <p>Manage your account settings and preferences.</p>
+            <div class="card-actions justify-end">
+                <a href="{% url 'accounts:profile' %}" class="btn btn-primary">View</a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+{% endblock %}
