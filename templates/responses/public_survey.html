@@ -174,14 +174,6 @@
                                         <span>{{ option.text }}</span>
                                     </label>
                                 {% endfor %}
-                                <label class="cursor-pointer flex items-center space-x-2">
-                                    <input type="radio" name="question_{{ question.id }}" 
-                                           value="other" class="radio radio-primary">
-                                    <span>Other:</span>
-                                    <input type="text" placeholder="Please specify..." 
-                                           class="input input-bordered input-sm flex-1 ml-2"
-                                           onchange="this.previousElementSibling.previousElementSibling.value = this.value">
-                                </label>
                             </div>
                             
                         {% elif question.question_type == 'multi_select' %}
@@ -193,11 +185,7 @@
                                         <span>{{ option.text }}</span>
                                     </label>
                                 {% endfor %}
-                                <label class="cursor-pointer flex items-center space-x-2">
-                                    <input type="checkbox" name="question_{{ question.id }}" 
-                                           value="other" class="checkbox checkbox-primary">
-                                    <span>Other:</span>
-                                    <input type="text" placeholder="Please specify..." 
+                            </div> 
                                            class="input input-bordered input-sm flex-1 ml-2"
                                            onchange="this.previousElementSibling.previousElementSibling.value = this.value">
                                 </label>

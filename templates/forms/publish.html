@@ -1,55 +1,217 @@
 {% extends 'base.html' %}
 
-{% block title %}Publish Form - {{ object.title }}{% endblock %}
+{% block title %}Publish Form - {{ form.title }}{% endblock %}
 
 {% block content %}
-<div class="hero min-h-[60vh] bg-base-200 rounded-lg">
-    <div class="hero-content text-center">
-        <div class="max-w-md">
-            <div class="flex justify-center mb-6">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-24 w-24 text-warning" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
-                </svg>
-            </div>
-            <h1 class="text-5xl font-bold mb-4">Coming Soon</h1>
-            <h2 class="text-2xl font-semibold text-primary mb-4">Form Publishing</h2>
-            <p class="py-6 text-lg">
-                The form publishing feature will allow you to make your surveys publicly accessible via a unique URL and QR code. 
-                You'll be able to control visibility, enable password protection, and manage response settings.
-            </p>
-            
-            <div class="alert alert-info shadow-lg mb-6">
-                <svg xmlns="http://www.w3.org/2000/svg" class="stroke-current flex-shrink-0 h-6 w-6" fill="none" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                </svg>
-                <div class="text-left">
-                    <p class="font-bold">Form: {{ object.title }}</p>
-                    <p class="text-sm">Status: {{ object.get_status_display }}</p>
-                </div>
-            </div>
+<div class="flex justify-between items-center mb-6">
+    <div>
+        <h1 class="text-3xl font-bold">Publish Form</h1>
+        <p class="text-gray-600">{{ form.title }}</p>
+    </div>
+    <div class="flex gap-2">
+        <a href="{% url 'forms:detail' form.pk %}" class="btn btn-outline btn-sm">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+            </svg>
+            Back to Form Details
+        </a>
+    </div>
+</div>
 
-            <div class="space-y-3 text-left mb-6">
-                <h3 class="font-bold text-lg">Planned Features:</h3>
-                <ul class="list-disc list-inside space-y-2 text-base-content/70">
-                    <li>Generate unique public URL for survey access</li>
-                    <li>Automatic QR code generation</li>
-                    <li>Password protection options</li>
-                    <li>Response limit settings</li>
-                    <li>Publish/unpublish controls</li>
-                    <li>Share via WhatsApp or other platforms</li>
-                </ul>
+<!-- Status Card -->
+<div class="card bg-base-100 shadow-xl mb-6">
+    <div class="card-body">
+        <div class="flex items-center justify-between">
+            <div>
+                <h2 class="card-title mb-2">Form Status</h2>
+                <div class="badge badge-{% if form.status == 'published' %}success{% else %}warning{% endif %} badge-lg">
+                    {{ form.get_status_display }}
+                </div>
+                {% if form.published_at %}
+                    <p class="text-sm text-gray-500 mt-2">Published on {{ form.published_at|date:"M d, Y \a\t h:i A" }}</p>
+                {% endif %}
             </div>
-            
-            <div class="flex gap-3 justify-center">
-                <a href="{% url 'forms:detail' object.pk %}" class="btn btn-primary">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
-                    </svg>
-                    Back to Form Details
-                </a>
-                <a href="{% url 'forms:list' %}" class="btn btn-outline">View All Forms</a>
+            <div class="text-right">
+                <p class="text-2xl font-bold">{{ form.questions.count }}</p>
+                <p class="text-sm text-gray-500">Question{{ form.questions.count|pluralize }}</p>
             </div>
         </div>
     </div>
 </div>
+
+{% if form.status == 'published' %}
+    <!-- Published Form Info -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+        <!-- Public Access -->
+        <div class="card bg-base-100 shadow-xl">
+            <div class="card-body">
+                <h3 class="card-title text-success">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
+                    </svg>
+                    Form is Live!
+                </h3>
+                <p class="text-sm text-gray-600 mb-4">Your form is publicly accessible via this URL:</p>
+                
+                <div class="form-control">
+                    <div class="input-group">
+                        <input type="text" value="{{ public_url }}" class="input input-bordered flex-1" readonly id="publicUrl">
+                        <button class="btn btn-square" onclick="copyToClipboard('publicUrl')">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="flex gap-2 mt-4">
+                    <a href="{{ public_url }}" target="_blank" class="btn btn-primary btn-sm">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                        </svg>
+                        Preview Form
+                    </a>
+                    {% if form.qr_code %}
+                        <a href="{% url 'forms:qr_code' form.slug %}" class="btn btn-secondary btn-sm">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z" />
+                            </svg>
+                            QR Code
+                        </a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Form Settings -->
+        <div class="card bg-base-100 shadow-xl">
+            <div class="card-body">
+                <h3 class="card-title">Security Settings</h3>
+                <form method="post" class="space-y-4">
+                    {% csrf_token %}
+                    <input type="hidden" name="action" value="update_settings">
+                    
+                    <div class="form-control">
+                        <label class="label">
+                            <span class="label-text">Password Protection</span>
+                        </label>
+                        <input type="password" name="password" value="{{ form.password }}" placeholder="Optional password" class="input input-bordered">
+                        <label class="label">
+                            <span class="label-text-alt">Leave empty for no password protection</span>
+                        </label>
+                    </div>
+
+                    <div class="form-control">
+                        <label class="cursor-pointer label">
+                            <span class="label-text">Require CAPTCHA</span>
+                            <input type="checkbox" name="require_captcha" class="checkbox checkbox-primary" {% if form.require_captcha %}checked{% endif %}>
+                        </label>
+                    </div>
+
+                    <div class="card-actions justify-end">
+                        <button type="submit" class="btn btn-primary btn-sm">Update Settings</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Unpublish Section -->
+    <div class="card bg-base-100 shadow-xl border-l-4 border-l-warning">
+        <div class="card-body">
+            <h3 class="card-title text-warning">Unpublish Form</h3>
+            <p class="text-sm text-gray-600 mb-4">
+                Unpublishing will make the form inaccessible to the public. Existing responses will be preserved.
+            </p>
+            <form method="post" onsubmit="return confirm('Are you sure you want to unpublish this form? It will no longer be accessible to the public.')">
+                {% csrf_token %}
+                <input type="hidden" name="action" value="unpublish">
+                <button type="submit" class="btn btn-warning">Unpublish Form</button>
+            </form>
+        </div>
+    </div>
+
+{% else %}
+    <!-- Publish Form -->
+    <div class="card bg-base-100 shadow-xl">
+        <div class="card-body">
+            <h2 class="card-title">Publish Your Form</h2>
+            <p class="text-gray-600 mb-6">
+                Make your form publicly accessible by publishing it. Once published, people can access it via a unique URL and QR code.
+            </p>
+
+            {% if form.questions.count == 0 %}
+                <div class="alert alert-warning shadow-lg mb-6">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="stroke-current flex-shrink-0 h-6 w-6" fill="none" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16c-.77.833.192 2.5 1.732 2.5z" />
+                    </svg>
+                    <div>
+                        <h4 class="font-bold">Form cannot be published</h4>
+                        <p class="text-sm">You need to add at least one question before publishing this form.</p>
+                    </div>
+                </div>
+                <a href="{% url 'forms:questions' form.pk %}" class="btn btn-primary">Add Questions</a>
+            {% else %}
+                <form method="post" class="space-y-6">
+                    {% csrf_token %}
+                    <input type="hidden" name="action" value="publish">
+                    
+                    <!-- Security Settings -->
+                    <div class="space-y-4">
+                        <h3 class="text-lg font-semibold">Security Settings</h3>
+                        
+                        <div class="form-control">
+                            <label class="label">
+                                <span class="label-text">Password Protection (Optional)</span>
+                            </label>
+                            <input type="password" name="password" placeholder="Enter password to protect form" class="input input-bordered">
+                            <label class="label">
+                                <span class="label-text-alt">Leave empty for no password protection</span>
+                            </label>
+                        </div>
+
+                        <div class="form-control">
+                            <label class="cursor-pointer label">
+                                <span class="label-text">Require CAPTCHA</span>
+                                <input type="checkbox" name="require_captcha" class="checkbox checkbox-primary" checked>
+                            </label>
+                            <label class="label">
+                                <span class="label-text-alt">Helps prevent spam submissions</span>
+                            </label>
+                        </div>
+                    </div>
+
+                    <!-- Publish Button -->
+                    <div class="card-actions justify-end">
+                        <button type="submit" class="btn btn-success">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+                            </svg>
+                            Publish Form
+                        </button>
+                    </div>
+                </form>
+            {% endif %}
+        </div>
+    </div>
+{% endif %}
+
+<script>
+function copyToClipboard(elementId) {
+    const element = document.getElementById(elementId);
+    element.select();
+    element.setSelectionRange(0, 99999);
+    navigator.clipboard.writeText(element.value);
+    
+    // Show toast notification
+    const toast = document.createElement('div');
+    toast.className = 'toast toast-top toast-end';
+    toast.innerHTML = '<div class="alert alert-success"><span>URL copied to clipboard!</span></div>';
+    document.body.appendChild(toast);
+    
+    setTimeout(() => {
+        document.body.removeChild(toast);
+    }, 3000);
+}
+</script>
 {% endblock %}

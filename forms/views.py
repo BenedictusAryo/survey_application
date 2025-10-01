@@ -1,10 +1,14 @@
 
-from django.views.generic import ListView, CreateView, DetailView, UpdateView, DeleteView
+from django.views.generic import ListView, CreateView, DetailView, UpdateView, DeleteView, View
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib import messages
 from django.urls import reverse_lazy
+from django.shortcuts import get_object_or_404, redirect, render
+from django.utils import timezone
+from django.http import JsonResponse
+from django.db import models
  
-from .models import Form, FormQuestion
+from .models import Form, FormQuestion, FormMasterDataAttachment
 from .forms import FormQuestionForm
 
 class FormListView(LoginRequiredMixin, ListView):
@@ -157,10 +161,88 @@ class FormQuestionDeleteView(LoginRequiredMixin, DeleteView):
     def get_success_url(self):
         return reverse_lazy('forms:questions', kwargs={'pk': self.object.form.pk})
 
-class FormPublishView(LoginRequiredMixin, DetailView):
-    model = Form
-    template_name = 'forms/publish.html'
-    context_object_name = 'form'
+class FormPublishView(LoginRequiredMixin, View):
+    """View to handle form publishing and unpublishing"""
+    
+    def get(self, request, pk):
+        """Display the publish form"""
+        form = get_object_or_404(Form, pk=pk, owner=request.user)
+        
+        context = {
+            'form': form,
+            'public_url': self._get_public_url(form) if form.status == 'published' else None,
+        }
+        
+        return render(request, 'forms/publish.html', context)
+    
+    def post(self, request, pk):
+        """Handle publish/unpublish actions"""
+        form = get_object_or_404(Form, pk=pk, owner=request.user)
+        action = request.POST.get('action')
+        
+        if action == 'publish':
+            return self._publish_form(request, form)
+        elif action == 'unpublish':
+            return self._unpublish_form(request, form)
+        elif action == 'update_settings':
+            return self._update_settings(request, form)
+            
+        messages.error(request, 'Invalid action.')
+        return redirect('forms:publish', pk=pk)
+    
+    def _publish_form(self, request, form):
+        """Publish the form"""
+        # Check if form has questions
+        if not form.questions.exists():
+            messages.error(request, 'Cannot publish form without questions.')
+            return redirect('forms:publish', pk=form.pk)
+            
+        # Update form status
+        form.status = 'published'
+        form.published_at = timezone.now()
+        
+        # Update settings from form
+        password = request.POST.get('password', '').strip()
+        require_captcha = request.POST.get('require_captcha') == 'on'
+        
+        form.password = password
+        form.require_captcha = require_captcha
+        
+        form.save()
+        
+        # Generate QR code (this will be done automatically in the model's save method)
+        
+        messages.success(request, f'Form "{form.title}" has been published successfully!')
+        return redirect('forms:publish', pk=form.pk)
+    
+    def _unpublish_form(self, request, form):
+        """Unpublish the form"""
+        form.status = 'draft'
+        form.save()
+        
+        messages.success(request, f'Form "{form.title}" has been unpublished.')
+        return redirect('forms:publish', pk=form.pk)
+    
+    def _update_settings(self, request, form):
+        """Update form settings without changing publish status"""
+        if form.status != 'published':
+            messages.error(request, 'Can only update settings for published forms.')
+            return redirect('forms:publish', pk=form.pk)
+            
+        password = request.POST.get('password', '').strip()
+        require_captcha = request.POST.get('require_captcha') == 'on'
+        
+        form.password = password
+        form.require_captcha = require_captcha
+        form.save()
+        
+        messages.success(request, 'Form settings updated successfully!')
+        return redirect('forms:publish', pk=form.pk)
+    
+    def _get_public_url(self, form):
+        """Get the public URL for the form"""
+        # In production, you would use request.build_absolute_uri()
+        return f"http://localhost:8000/survey/{form.slug}/"
 
 class FormResponsesView(LoginRequiredMixin, DetailView):
     model = Form
@@ -172,3 +254,114 @@ class FormQRCodeView(DetailView):
     template_name = 'forms/qr_code.html'
     slug_field = 'slug'
     context_object_name = 'form'
+    
+    def get_object(self, queryset=None):
+        """Get the form object and ensure it's published"""
+        obj = super().get_object(queryset)
+        if obj.status != 'published':
+            from django.http import Http404
+            raise Http404("Form is not published")
+        
+        # Generate QR code if it doesn't exist
+        if not obj.qr_code:
+            obj.generate_qr_code()
+            obj.refresh_from_db()
+            
+        return obj
+    
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        form_obj = self.object
+        context['public_url'] = f"http://localhost:8000/survey/{form_obj.slug}/"
+        return context
+
+
+# HTMX Views for Master Data Attachment
+class MasterDataAttachmentListView(LoginRequiredMixin, View):
+    """HTMX view to list available master data sets for attachment"""
+    
+    def get(self, request, pk):
+        form_obj = get_object_or_404(Form, pk=pk, owner=request.user)
+        
+        # Get master data sets that user owns or has access to
+        from master_data.models import MasterDataSet
+        available_datasets = MasterDataSet.objects.filter(
+            models.Q(owner=request.user) | 
+            models.Q(shared_with=request.user)
+        ).exclude(
+            id__in=form_obj.master_data_attachments.values_list('dataset_id', flat=True)
+        ).distinct()
+        
+        context = {
+            'form': form_obj,
+            'available_datasets': available_datasets
+        }
+        
+        return render(request, 'forms/partials/master_data_attachment_list.html', context)
+
+
+class MasterDataAttachView(LoginRequiredMixin, View):
+    """HTMX view to attach a master data set to a form"""
+    
+    def post(self, request, pk):
+        form_obj = get_object_or_404(Form, pk=pk, owner=request.user)
+        dataset_id = request.POST.get('dataset_id')
+        
+        if not dataset_id:
+            return JsonResponse({'error': 'Dataset ID is required'}, status=400)
+        
+        from master_data.models import MasterDataSet
+        try:
+            # Check if dataset exists and user has access
+            dataset = MasterDataSet.objects.filter(
+                id=dataset_id
+            ).filter(
+                models.Q(owner=request.user) | models.Q(shared_with=request.user)
+            ).first()
+            
+            if not dataset:
+                return JsonResponse({'error': 'Dataset not found or access denied'}, status=404)
+                
+        except Exception as e:
+            return JsonResponse({'error': f'Error: {str(e)}'}, status=500)
+        
+        # Check if already attached
+        if FormMasterDataAttachment.objects.filter(form=form_obj, dataset=dataset).exists():
+            return JsonResponse({'error': 'Dataset is already attached to this form'}, status=400)
+        
+        # Create attachment
+        FormMasterDataAttachment.objects.create(
+            form=form_obj,
+            dataset=dataset,
+            order=form_obj.master_data_attachments.count()
+        )
+        
+        # Return updated attachments list
+        context = {
+            'form': form_obj,
+            'master_data_attachments': form_obj.master_data_attachments.select_related('dataset').all()
+        }
+        
+        return render(request, 'forms/partials/master_data_attachments.html', context)
+
+
+class MasterDataDetachView(LoginRequiredMixin, View):
+    """HTMX view to detach a master data set from a form"""
+    
+    def delete(self, request, pk, attachment_id):
+        form_obj = get_object_or_404(Form, pk=pk, owner=request.user)
+        attachment = get_object_or_404(
+            FormMasterDataAttachment, 
+            id=attachment_id, 
+            form=form_obj
+        )
+        
+        attachment.delete()
+        
+        # Return updated attachments list
+        context = {
+            'form': form_obj,
+            'master_data_attachments': form_obj.master_data_attachments.select_related('dataset').all()
+        }
+        
+        return render(request, 'forms/partials/master_data_attachments.html', context)

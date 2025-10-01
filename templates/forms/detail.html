@@ -11,6 +11,19 @@
     <div class="flex gap-2">
         <a href="{% url 'forms:edit' form.pk %}" class="btn btn-outline btn-sm">Edit Details</a>
         <a href="{% url 'forms:questions' form.pk %}" class="btn btn-primary btn-sm">Manage Questions</a>
+        <a href="{% url 'forms:publish' form.pk %}" class="btn {% if form.status == 'published' %}btn-success{% else %}btn-warning{% endif %} btn-sm">
+            {% if form.status == 'published' %}
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                </svg>
+                Published
+            {% else %}
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+                </svg>
+                Publish
+            {% endif %}
+        </a>
         {% if form.status == 'published' %}
             <a href="{% url 'forms:qr_code' form.slug %}" class="btn btn-secondary btn-sm">QR Code</a>
         {% endif %}
@@ -23,6 +36,16 @@
         <div class="card-body">
             <h3 class="text-sm text-gray-500 uppercase">Status</h3>
             <div class="badge badge-{{ form.status }} badge-lg">{{ form.get_status_display }}</div>
+            {% if form.status == 'published' %}
+                <div class="mt-2">
+                    <a href="/survey/{{ form.slug }}/" target="_blank" class="btn btn-xs btn-outline">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                        </svg>
+                        View Public Form
+                    </a>
+                </div>
+            {% endif %}
         </div>
     </div>
     
@@ -56,24 +79,10 @@
             <div class="card-body">
                 <h2 class="card-title">Master Data Sets</h2>
                 
-                <div class="space-y-2 mb-4">
-                    {% for attachment in master_data_attachments %}
-                        <div class="flex justify-between items-center p-3 bg-base-200 rounded">
-                            <div>
-                                <span class="font-medium">{{ attachment.dataset.name }}</span>
-                                <p class="text-xs text-gray-500">{{ attachment.dataset.records.count }} records</p>
-                            </div>
-                            <div class="flex gap-1">
-                                <button class="btn btn-xs btn-outline" onclick="viewDataset({{ attachment.dataset.id }})">View</button>
-                            </div>
-                        </div>
-                    {% empty %}
-                        <p class="text-center text-gray-500 py-4">No master data attached yet.</p>
-                    {% endfor %}
-                </div>
+                {% include 'forms/partials/master_data_attachments.html' with master_data_attachments=master_data_attachments %}
                 
                 <div class="divider">Actions</div>
-                <button class="btn btn-primary btn-sm w-full" onclick="attachMasterData()">Attach Master Data</button>
+                <button class="btn btn-primary btn-sm w-full" onclick="openAttachModal()">Attach Master Data</button>
             </div>
         </div>
         
@@ -221,8 +230,18 @@ function viewDataset(datasetId) {
     window.location.href = `/master-data/${datasetId}/`;
 }
 
-function attachMasterData() {
-    alert('Attach Master Data functionality will be implemented with HTMX');
+function openAttachModal() {
+    // Load available datasets via HTMX
+    htmx.ajax('GET', '{% url "forms:master_data_available" form.pk %}', {
+        target: '#attach-modal-content'
+    });
+    
+    // Open modal
+    document.getElementById('attach-master-data-modal').classList.add('modal-open');
+}
+
+function closeAttachModal() {
+    document.getElementById('attach-master-data-modal').classList.remove('modal-open');
 }
 
 function inviteCollaborator() {
@@ -259,5 +278,40 @@ function deleteForm() {
         alert('Delete functionality will be implemented');
     }
 }
+
+// HTMX event listeners for better UX
+document.body.addEventListener('htmx:afterRequest', function(evt) {
+    if (evt.detail.xhr.status === 200 && evt.detail.pathInfo.pathname.includes('master-data/attach')) {
+        // Close modal after successful attachment
+        closeAttachModal();
+        
+        // Show success message
+        const toast = document.createElement('div');
+        toast.className = 'toast toast-top toast-end';
+        toast.innerHTML = '<div class="alert alert-success"><span>Master data attached successfully!</span></div>';
+        document.body.appendChild(toast);
+        
+        setTimeout(() => {
+            document.body.removeChild(toast);
+        }, 3000);
+    }
+});
+
+// Handle modal close on escape key
+document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') {
+        closeAttachModal();
+    }
+});
 </script>
+</script>
+
+<!-- Master Data Attachment Modal -->
+<div class="modal" id="attach-master-data-modal">
+    <div class="modal-box w-11/12 max-w-4xl" id="attach-modal-content">
+        <!-- Content will be loaded via HTMX -->
+        <div class="loading loading-spinner loading-lg mx-auto"></div>
+    </div>
+    <div class="modal-backdrop" onclick="closeAttachModal()"></div>
+</div>
 {% endblock %}

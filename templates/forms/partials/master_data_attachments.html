@@ -1,0 +1,22 @@
+<!-- Master Data Attachments List -->
+<div class="space-y-2 mb-4" id="master-data-attachments">
+    {% for attachment in master_data_attachments %}
+        <div class="flex justify-between items-center p-3 bg-base-200 rounded">
+            <div>
+                <span class="font-medium">{{ attachment.dataset.name }}</span>
+                <p class="text-xs text-gray-500">{{ attachment.dataset.records.count }} records</p>
+            </div>
+            <div class="flex gap-1">
+                <button class="btn btn-xs btn-outline" onclick="viewDataset({{ attachment.dataset.id }})">View</button>
+                <button class="btn btn-xs btn-error" 
+                        hx-delete="{% url 'forms:master_data_detach' form.pk attachment.id %}"
+                        hx-target="#master-data-attachments"
+                        hx-confirm="Are you sure you want to detach this dataset?">
+                    Remove
+                </button>
+            </div>
+        </div>
+    {% empty %}
+        <p class="text-center text-gray-500 py-4">No master data attached yet.</p>
+    {% endfor %}
+</div>

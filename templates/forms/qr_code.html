@@ -1,55 +1,170 @@
 {% extends 'base.html' %}
 
-{% block title %}QR Code - {{ object.title }}{% endblock %}
+{% block title %}QR Code - {{ form.title }}{% endblock %}
 
 {% block content %}
-<div class="hero min-h-[60vh] bg-base-200 rounded-lg">
-    <div class="hero-content text-center">
-        <div class="max-w-md">
-            <div class="flex justify-center mb-6">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-24 w-24 text-accent" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+<div class="flex justify-between items-center mb-6">
+    <div>
+        <h1 class="text-3xl font-bold">QR Code</h1>
+        <p class="text-gray-600">{{ form.title }}</p>
+    </div>
+    <div class="flex gap-2">
+        <a href="{% url 'forms:detail' form.pk %}" class="btn btn-outline btn-sm">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+            </svg>
+            Back to Form Details
+        </a>
+    </div>
+</div>
+
+<!-- QR Code Display -->
+<div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+    <!-- QR Code Image -->
+    <div class="card bg-base-100 shadow-xl">
+        <div class="card-body">
+            <h2 class="card-title text-center">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z" />
                 </svg>
-            </div>
-            <h1 class="text-5xl font-bold mb-4">Coming Soon</h1>
-            <h2 class="text-2xl font-semibold text-accent mb-4">QR Code Generator</h2>
-            <p class="py-6 text-lg">
-                Generate and download QR codes for your published surveys. Perfect for printing on flyers, 
-                posters, or displaying at events for easy mobile access.
-            </p>
+                Survey QR Code
+            </h2>
             
-            <div class="alert alert-info shadow-lg mb-6">
-                <svg xmlns="http://www.w3.org/2000/svg" class="stroke-current flex-shrink-0 h-6 w-6" fill="none" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                </svg>
-                <div class="text-left">
-                    <p class="font-bold">Form: {{ object.title }}</p>
-                    <p class="text-sm">Slug: {{ object.slug }}</p>
+            <div class="flex justify-center py-8">
+                {% if form.qr_code %}
+                    <div class="text-center">
+                        <img src="{{ form.qr_code.url }}" alt="QR Code for {{ form.title }}" class="mx-auto mb-4 border border-gray-200 rounded-lg" style="max-width: 300px;">
+                        <p class="text-sm text-gray-600">Scan to access survey</p>
+                    </div>
+                {% else %}
+                    <div class="text-center">
+                        <div class="loading loading-spinner loading-lg mb-4"></div>
+                        <p class="text-sm text-gray-600">Generating QR code...</p>
+                    </div>
+                {% endif %}
+            </div>
+            
+            <!-- Download Options -->
+            {% if form.qr_code %}
+                <div class="card-actions justify-center">
+                    <a href="{{ form.qr_code.url }}" download="qr_{{ form.slug }}.png" class="btn btn-primary">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3M3 17V7a2 2 0 012-2h6l2 2h6a2 2 0 012 2v10a2 2 0 01-2 2H5a2 2 0 01-2-2z" />
+                        </svg>
+                        Download QR Code
+                    </a>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- QR Code Information -->
+    <div class="card bg-base-100 shadow-xl">
+        <div class="card-body">
+            <h2 class="card-title">Survey Information</h2>
+            
+            <div class="space-y-4">
+                <div>
+                    <h3 class="font-semibold text-sm text-gray-500 uppercase">Survey Title</h3>
+                    <p class="text-lg">{{ form.title }}</p>
+                </div>
+                
+                {% if form.description %}
+                    <div>
+                        <h3 class="font-semibold text-sm text-gray-500 uppercase">Description</h3>
+                        <p class="text-sm">{{ form.description }}</p>
+                    </div>
+                {% endif %}
+                
+                <div>
+                    <h3 class="font-semibold text-sm text-gray-500 uppercase">Public URL</h3>
+                    <div class="form-control">
+                        <div class="input-group">
+                            <input type="text" value="{{ public_url }}" class="input input-bordered input-sm flex-1" readonly id="publicUrl">
+                            <button class="btn btn-square btn-sm" onclick="copyToClipboard('publicUrl')">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                                </svg>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                
+                <div>
+                    <h3 class="font-semibold text-sm text-gray-500 uppercase">Statistics</h3>
+                    <div class="stats stats-vertical shadow">
+                        <div class="stat">
+                            <div class="stat-title">Questions</div>
+                            <div class="stat-value text-2xl">{{ form.questions.count }}</div>
+                        </div>
+                        <div class="stat">
+                            <div class="stat-title">Responses</div>
+                            <div class="stat-value text-2xl">{{ form.responses.count }}</div>
+                        </div>
+                    </div>
                 </div>
             </div>
-
-            <div class="space-y-3 text-left mb-6">
-                <h3 class="font-bold text-lg">Planned Features:</h3>
-                <ul class="list-disc list-inside space-y-2 text-base-content/70">
-                    <li>Auto-generate QR code for survey URL</li>
-                    <li>Download QR code as PNG or SVG</li>
-                    <li>Customize QR code size and colors</li>
-                    <li>Add logo or branding to QR code</li>
-                    <li>Print-ready QR code with title</li>
-                    <li>Track QR code scans and analytics</li>
-                </ul>
-            </div>
             
-            <div class="flex gap-3 justify-center">
-                <a href="{% url 'forms:detail' object.pk %}" class="btn btn-primary">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+            <!-- Actions -->
+            <div class="card-actions justify-end mt-6">
+                <a href="{{ public_url }}" target="_blank" class="btn btn-secondary btn-sm">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
                     </svg>
-                    Back to Form Details
+                    Preview Survey
                 </a>
-                <a href="{% url 'forms:list' %}" class="btn btn-outline">View All Forms</a>
+                <a href="{% url 'forms:publish' form.pk %}" class="btn btn-primary btn-sm">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                    </svg>
+                    Manage Publishing
+                </a>
             </div>
         </div>
     </div>
 </div>
+
+<!-- Usage Instructions -->
+<div class="card bg-base-100 shadow-xl mt-6">
+    <div class="card-body">
+        <h2 class="card-title">How to Use the QR Code</h2>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4">
+            <div class="text-center">
+                <div class="text-4xl mb-2">📱</div>
+                <h3 class="font-semibold">Scan with Phone</h3>
+                <p class="text-sm text-gray-600">Use any QR code scanner app or your phone's camera to scan the code</p>
+            </div>
+            <div class="text-center">
+                <div class="text-4xl mb-2">🖨️</div>
+                <h3 class="font-semibold">Print & Share</h3>
+                <p class="text-sm text-gray-600">Download and print the QR code for flyers, posters, or handouts</p>
+            </div>
+            <div class="text-center">
+                <div class="text-4xl mb-2">📊</div>
+                <h3 class="font-semibold">Collect Responses</h3>
+                <p class="text-sm text-gray-600">Scanning the code takes users directly to your survey form</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function copyToClipboard(elementId) {
+    const element = document.getElementById(elementId);
+    element.select();
+    element.setSelectionRange(0, 99999);
+    navigator.clipboard.writeText(element.value);
+    
+    // Show toast notification
+    const toast = document.createElement('div');
+    toast.className = 'toast toast-top toast-end';
+    toast.innerHTML = '<div class="alert alert-success"><span>URL copied to clipboard!</span></div>';
+    document.body.appendChild(toast);
+    
+    setTimeout(() => {
+        document.body.removeChild(toast);
+    }, 3000);
+}
+</script>
 {% endblock %}

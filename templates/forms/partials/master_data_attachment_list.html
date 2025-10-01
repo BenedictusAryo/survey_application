@@ -1,0 +1,48 @@
+<!-- Available Master Data Sets for Attachment -->
+<div class="modal-box">
+    <h3 class="font-bold text-lg mb-4">Attach Master Data Set</h3>
+    
+    {% if available_datasets %}
+        <div class="space-y-2 max-h-96 overflow-y-auto">
+            {% for dataset in available_datasets %}
+                <div class="card bg-base-100 border border-gray-200">
+                    <div class="card-body p-4">
+                        <div class="flex justify-between items-start">
+                            <div class="flex-1">
+                                <h4 class="font-semibold">{{ dataset.name }}</h4>
+                                <p class="text-sm text-gray-600 mb-2">{{ dataset.description|truncatewords:20 }}</p>
+                                <div class="flex items-center gap-4 text-xs text-gray-500">
+                                    <span>📊 {{ dataset.records.count }} records</span>
+                                    <span>🏛️ {{ dataset.columns.count }} columns</span>
+                                    <span>👤 {{ dataset.owner.username }}</span>
+                                </div>
+                            </div>
+                            <button class="btn btn-primary btn-sm"
+                                    hx-post="{% url 'forms:master_data_attach' form.pk %}"
+                                    hx-vals='{"dataset_id": "{{ dataset.id }}"}'
+                                    hx-target="#master-data-attachments"
+                                    hx-swap="outerHTML">
+                                Attach
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+    {% else %}
+        <div class="text-center py-8">
+            <div class="text-4xl mb-4">📊</div>
+            <h4 class="font-semibold mb-2">No Available Datasets</h4>
+            <p class="text-gray-600 mb-4">
+                You don't have any master data sets available to attach, or all available datasets are already attached to this form.
+            </p>
+            <a href="{% url 'master_data:list' %}" class="btn btn-primary btn-sm">
+                Create Master Data Set
+            </a>
+        </div>
+    {% endif %}
+    
+    <div class="modal-action">
+        <button class="btn" onclick="closeAttachModal()">Close</button>
+    </div>
+</div>
