@@ -1,1 +1,55 @@
-{% extends 'base.html' %}{% block content %}<h1>Coming soon: qr_code</h1>{% endblock %}
+{% extends 'base.html' %}
+
+{% block title %}QR Code - {{ object.title }}{% endblock %}
+
+{% block content %}
+<div class="hero min-h-[60vh] bg-base-200 rounded-lg">
+    <div class="hero-content text-center">
+        <div class="max-w-md">
+            <div class="flex justify-center mb-6">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-24 w-24 text-accent" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z" />
+                </svg>
+            </div>
+            <h1 class="text-5xl font-bold mb-4">Coming Soon</h1>
+            <h2 class="text-2xl font-semibold text-accent mb-4">QR Code Generator</h2>
+            <p class="py-6 text-lg">
+                Generate and download QR codes for your published surveys. Perfect for printing on flyers, 
+                posters, or displaying at events for easy mobile access.
+            </p>
+            
+            <div class="alert alert-info shadow-lg mb-6">
+                <svg xmlns="http://www.w3.org/2000/svg" class="stroke-current flex-shrink-0 h-6 w-6" fill="none" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                </svg>
+                <div class="text-left">
+                    <p class="font-bold">Form: {{ object.title }}</p>
+                    <p class="text-sm">Slug: {{ object.slug }}</p>
+                </div>
+            </div>
+
+            <div class="space-y-3 text-left mb-6">
+                <h3 class="font-bold text-lg">Planned Features:</h3>
+                <ul class="list-disc list-inside space-y-2 text-base-content/70">
+                    <li>Auto-generate QR code for survey URL</li>
+                    <li>Download QR code as PNG or SVG</li>
+                    <li>Customize QR code size and colors</li>
+                    <li>Add logo or branding to QR code</li>
+                    <li>Print-ready QR code with title</li>
+                    <li>Track QR code scans and analytics</li>
+                </ul>
+            </div>
+            
+            <div class="flex gap-3 justify-center">
+                <a href="{% url 'forms:detail' object.pk %}" class="btn btn-primary">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+                    </svg>
+                    Back to Form Details
+                </a>
+                <a href="{% url 'forms:list' %}" class="btn btn-outline">View All Forms</a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

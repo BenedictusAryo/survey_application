@@ -1,1 +1,55 @@
-{% extends 'base.html' %}{% block content %}<h1>Coming soon: edit</h1>{% endblock %}
+{% extends 'base.html' %}
+
+{% block title %}Edit Form - {{ form.title }}{% endblock %}
+
+{% block content %}
+<div class="hero min-h-[60vh] bg-base-200 rounded-lg">
+    <div class="hero-content text-center">
+        <div class="max-w-md">
+            <div class="flex justify-center mb-6">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-24 w-24 text-secondary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                </svg>
+            </div>
+            <h1 class="text-5xl font-bold mb-4">Coming Soon</h1>
+            <h2 class="text-2xl font-semibold text-secondary mb-4">Form Editor</h2>
+            <p class="py-6 text-lg">
+                The advanced form editor will provide a comprehensive interface for editing form details, 
+                settings, and structure. You'll be able to manage all aspects of your form in one place.
+            </p>
+            
+            <div class="alert alert-info shadow-lg mb-6">
+                <svg xmlns="http://www.w3.org/2000/svg" class="stroke-current flex-shrink-0 h-6 w-6" fill="none" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                </svg>
+                <div class="text-left">
+                    <p class="font-bold">Form: {{ object.title }}</p>
+                    <p class="text-sm">Status: {{ object.get_status_display }}</p>
+                </div>
+            </div>
+
+            <div class="space-y-3 text-left mb-6">
+                <h3 class="font-bold text-lg">Planned Features:</h3>
+                <ul class="list-disc list-inside space-y-2 text-base-content/70">
+                    <li>Edit form title and description</li>
+                    <li>Configure security settings (password, CAPTCHA)</li>
+                    <li>Manage master data attachments</li>
+                    <li>Set response options (unique/duplicate entries)</li>
+                    <li>Customize identity section settings</li>
+                    <li>Configure notification preferences</li>
+                </ul>
+            </div>
+            
+            <div class="flex gap-3 justify-center">
+                <a href="{% url 'forms:detail' object.pk %}" class="btn btn-primary">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+                    </svg>
+                    Back to Form Details
+                </a>
+                <a href="{% url 'forms:list' %}" class="btn btn-outline">View All Forms</a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
