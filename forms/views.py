@@ -292,10 +292,10 @@ def export_responses_excel(request, pk):
     if not form_obj:
         return HttpResponse('Not found or permission denied', status=403)
 
-    # Base response columns
+    # Base response columns (removed: response_id, user, record_id, ip_address, user_agent, updated_at)
     base_headers = [
-        'response_id', 'submitted_at', 'updated_at', 'is_complete',
-        'user', 'record_id', 'record_display', 'is_new_identity', 'ip_address', 'user_agent'
+        'submitted_at', 'is_complete',
+        'record_display', 'is_new_identity'
     ]
 
     # Master data attachment columns (prefixed by dataset name)
@@ -321,12 +321,8 @@ def export_responses_excel(request, pk):
     data_rows = []
     for resp in responses_qs.all():
         row = []
-        row.append(resp.id)
         row.append(resp.submitted_at.strftime('%Y-%m-%d %H:%M:%S') if resp.submitted_at else '')
-        row.append(resp.updated_at.strftime('%Y-%m-%d %H:%M:%S') if resp.updated_at else '')
         row.append('Yes' if resp.is_complete else 'No')
-        row.append(resp.user.username if resp.user else '')
-        row.append(resp.record.id if resp.record else '')
         
         # For record display, try attachments' display_column if available
         record_display = ''
@@ -342,8 +338,6 @@ def export_responses_excel(request, pk):
 
         row.append(record_display)
         row.append('Yes (Pending Approval)' if (resp.is_new_identity and not resp.record) else ('Yes (Approved)' if (resp.is_new_identity and resp.record) else 'No'))
-        row.append(resp.ip_address or '')
-        row.append(resp.user_agent or '')
 
         # Master data columns values
         for attach, col, header in md_columns:
@@ -377,10 +371,12 @@ def export_responses_excel(request, pk):
 
     # Create DataFrame
     import pandas as pd
+    from datetime import datetime
     df = pd.DataFrame(data_rows, columns=headers)
 
-    # Generate Excel file
-    filename = f"{form_obj.slug or slugify(form_obj.title)}-responses.xlsx"
+    # Generate Excel file with date
+    current_date = datetime.now().strftime('%Y-%m-%d')
+    filename = f"{form_obj.slug or slugify(form_obj.title)}-responses-{current_date}.xlsx"
     response = HttpResponse(
         content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
     )
