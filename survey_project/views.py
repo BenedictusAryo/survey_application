@@ -12,8 +12,8 @@ class HomeView(TemplateView):
         
         if self.request.user.is_authenticated and hasattr(self.request.user, 'is_form_creator') and self.request.user.is_form_creator:
             # Get statistics for form creators
-            context['total_datasets'] = MasterDataset.objects.filter(created_by=self.request.user).count()
-            context['total_forms'] = Form.objects.filter(created_by=self.request.user).count()
-            context['total_responses'] = Response.objects.filter(form__created_by=self.request.user).count()
+            context['total_datasets'] = MasterDataSet.objects.filter(owner=self.request.user).count()
+            context['total_forms'] = Form.objects.filter(owner=self.request.user).count()
+            context['total_responses'] = Response.objects.filter(form__owner=self.request.user).count()
         
         return context
