@@ -1,6 +1,6 @@
 from django.views.generic import TemplateView
 from forms.models import Form
-from master_data.models import MasterDataset
+from master_data.models import MasterDataSet
 from responses.models import Response
 
 
