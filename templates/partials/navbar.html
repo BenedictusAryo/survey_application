@@ -29,7 +29,7 @@
         <a class="btn btn-ghost normal-case text-xl font-bold hover:bg-white/20 gap-2" href="{% url 'home' %}">
             {% load static %}
             <img src="{% static 'images/logo.png' %}" alt="Logo" class="h-10 w-auto drop-shadow-lg">
-            <span class="hidden sm:inline text-base-content drop-shadow-md">Survey App</span>
+            <span class="hidden sm:inline text-base-content drop-shadow-md text-2xl">Paroki Bintaro Survey Application</span>
         </a>
     </div>
     
@@ -61,7 +61,7 @@
                             <span class="text-lg font-bold">{{ user.username|first|upper }}</span>
                         </div>
                     </div>
-                    <span class="hidden md:inline font-semibold">{{ user.username }}</span>
+                    <span class="hidden md:inline text-primary text-lg font-bold">{{ user.username }}</span>
                     <i class="fas fa-chevron-down text-xs"></i>
                 </div>
                 <ul tabindex="0" class="menu menu-sm dropdown-content mt-3 z-[1] p-2 shadow-2xl bg-base-100 rounded-box w-56 text-base-content border border-base-300">

@@ -72,6 +72,10 @@ class FormEditView(LoginRequiredMixin, UpdateView):
         messages.success(self.request, f'Form "{form.instance.title}" updated successfully!')
         return super().form_valid(form)
     
+    def form_invalid(self, form):
+        messages.error(self.request, 'There was an error updating the form. Please check the fields below.')
+        return super().form_invalid(form)
+    
     def get_success_url(self):
         return reverse_lazy('forms:detail', kwargs={'pk': self.object.pk})
 

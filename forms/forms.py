@@ -100,7 +100,7 @@ class FormEditForm(forms.ModelForm):
         model = Form
         fields = [
             'title', 'description', 'password', 'require_captcha', 
-            'form_image', 'form_settings'
+            'form_image'
         ]
         widgets = {
             'title': forms.TextInput(attrs={
@@ -112,9 +112,10 @@ class FormEditForm(forms.ModelForm):
                 'rows': 4,
                 'placeholder': 'Describe what this form is for...'
             }),
-            'password': forms.PasswordInput(attrs={
+            'password': forms.TextInput(attrs={
                 'class': 'input input-bordered w-full',
-                'placeholder': 'Optional password protection'
+                'placeholder': 'Optional password protection',
+                'type': 'password'
             }),
             'require_captcha': forms.CheckboxInput(attrs={
                 'class': 'checkbox checkbox-primary'
@@ -145,14 +146,26 @@ class FormEditForm(forms.ModelForm):
         self.fields['title'].help_text = "The title that will be displayed to users"
         self.fields['description'].help_text = "A brief description of the form's purpose"
         self.fields['password'].help_text = "Leave blank for no password protection"
+        self.fields['password'].required = False
         self.fields['require_captcha'].help_text = "Helps prevent spam submissions"
+        self.fields['require_captcha'].required = False  # Allow unchecking
         self.fields['form_image'].help_text = "Header image for the form (optional)"
+        self.fields['form_image'].required = False
         
         # Load settings from form_settings JSON field
-        if self.instance and self.instance.pk and self.instance.form_settings:
-            settings = self.instance.form_settings
-            self.fields['unique_entries'].initial = settings.get('unique_entries', False)
-            self.fields['enable_identity'].initial = settings.get('enable_identity', True)
+        if self.instance and self.instance.pk:
+            if self.instance.form_settings:
+                settings = self.instance.form_settings
+                self.fields['unique_entries'].initial = settings.get('unique_entries', False)
+                self.fields['enable_identity'].initial = settings.get('enable_identity', True)
+    
+    def clean_password(self):
+        """Handle password field - keep existing if empty"""
+        password = self.cleaned_data.get('password')
+        # If password is empty and we're editing an existing form, keep the old password
+        if not password and self.instance and self.instance.pk:
+            return self.instance.password
+        return password
     
     def save(self, commit=True):
         instance = super().save(commit=False)
@@ -169,4 +182,5 @@ class FormEditForm(forms.ModelForm):
         if commit:
             instance.save()
         
+        return instance
         return instance
