@@ -7,18 +7,31 @@
 {% block extra_head %}
 <style>
     /* Custom styles for survey form */
+    body {
+        background: linear-gradient(135deg, #f0fdf4 0%, #ecfdf5 100%);
+        min-height: 100vh;
+    }
+    
     .survey-container {
-        max-width: 800px;
+        max-width: 900px;
         margin: 0 auto;
-        padding: 1rem;
+        padding: 1.5rem;
     }
     
     .question-card {
         background: white;
-        border-radius: 0.5rem;
-        box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-        margin-bottom: 1.5rem;
-        padding: 1.5rem;
+        border-radius: 1rem;
+        box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1), 0 2px 4px -1px rgba(0,0,0,0.06);
+        border: 2px solid rgba(16, 185, 129, 0.1);
+        margin-bottom: 2rem;
+        padding: 2rem;
+        transition: all 0.3s;
+    }
+    
+    .question-card:hover {
+        box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1), 0 4px 6px -2px rgba(0,0,0,0.05);
+        border-color: rgba(16, 185, 129, 0.3);
+        transform: translateY(-2px);
     }
     
     .question-image {
@@ -52,16 +65,32 @@
     }
     
     .identity-section {
-        background: #f0f9ff;
-        border: 1px solid #0ea5e9;
-        border-radius: 0.5rem;
-        padding: 1.5rem;
-        margin-bottom: 2rem;
+        background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%);
+        border: 3px solid #3b82f6;
+        border-radius: 1.5rem;
+        padding: 2.5rem;
+        margin-bottom: 3rem;
+        box-shadow: 0 10px 20px rgba(59, 130, 246, 0.15);
     }
     
     .required-indicator {
         color: #ef4444;
         font-weight: bold;
+        font-size: 1.2rem;
+    }
+    
+    .question-number {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 2.5rem;
+        height: 2.5rem;
+        background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+        color: white;
+        border-radius: 50%;
+        font-weight: bold;
+        margin-right: 1rem;
+        box-shadow: 0 4px 6px rgba(16, 185, 129, 0.3);
     }
     
     /* Captcha styling */
@@ -182,31 +211,68 @@
             </div>
         </div>
     {% else %}
-        <!-- Survey Form -->
-        <div class="text-center mb-8">
-            {% if survey_form.form_image %}
-                <img src="{{ survey_form.form_image.url }}" alt="Form Header" class="w-full max-w-md mx-auto rounded-lg shadow-md mb-4">
-            {% endif %}
-            
-            <h1 class="text-4xl font-bold text-primary mb-2">{{ survey_form.title }}</h1>
-            {% if survey_form.description %}
-                <p class="text-lg text-gray-600 mb-4">{{ survey_form.description }}</p>
-            {% endif %}
-            
-            <div class="divider"></div>
+        <!-- Survey Form Header -->
+        <div class="card bg-base-100 shadow-2xl border-4 border-primary/20 mb-10">
+            <div class="card-body text-center p-8 lg:p-12">
+                {% if survey_form.form_image %}
+                    <div class="mb-6">
+                        <img src="{{ survey_form.form_image.url }}" alt="Form Header" 
+                             class="w-full max-w-lg mx-auto rounded-2xl shadow-2xl border-4 border-primary/30">
+                    </div>
+                {% endif %}
+                
+                <div class="inline-block p-4 bg-primary/10 rounded-full mb-6">
+                    <i class="fas fa-clipboard-list text-6xl text-primary"></i>
+                </div>
+                
+                <h1 class="text-4xl lg:text-5xl font-bold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent mb-4">
+                    {{ survey_form.title }}
+                </h1>
+                
+                {% if survey_form.description %}
+                    <p class="text-lg lg:text-xl text-base-content/70 max-w-3xl mx-auto mb-6">
+                        {{ survey_form.description }}
+                    </p>
+                {% endif %}
+                
+                <div class="flex items-center justify-center gap-4 flex-wrap">
+                    <div class="badge badge-primary badge-lg gap-2">
+                        <i class="fas fa-clipboard-check"></i>
+                        Survey Form
+                    </div>
+                    <div class="badge badge-outline badge-lg gap-2">
+                        <i class="fas fa-lock"></i>
+                        Secure & Anonymous
+                    </div>
+                </div>
+            </div>
         </div>
 
         {% if master_data_attachments %}
             <!-- Identity Selection Section -->
             <div class="identity-section" id="identity-section">
-                <h2 class="text-xl font-bold mb-4">📋 Identity Information</h2>
-                <p class="text-sm text-gray-600 mb-4">Please select your identity from the database to avoid re-entering your information.</p>
+                <div class="flex items-center gap-4 mb-6">
+                    <div class="p-4 bg-blue-500 rounded-2xl shadow-lg">
+                        <i class="fas fa-user-circle text-4xl text-white"></i>
+                    </div>
+                    <div>
+                        <h2 class="text-2xl lg:text-3xl font-bold text-blue-900 mb-2">
+                            📋 Identity Information
+                        </h2>
+                        <p class="text-base text-blue-700">
+                            Please select your identity from the database to avoid re-entering your information.
+                        </p>
+                    </div>
+                </div>
                 
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
                     {% for attachment in master_data_attachments %}
                         <div class="form-control">
                             <label class="label">
-                                <span class="label-text font-medium">{{ attachment.dataset.name }}</span>
+                                <span class="label-text font-bold text-lg flex items-center gap-2">
+                                    <i class="fas fa-database text-primary"></i>
+                                    {{ attachment.dataset.name }}
+                                </span>
                             </label>
                             
                             <!-- Filter dropdowns (if configured) -->
@@ -276,14 +342,30 @@
             {% for question in questions %}
                 <div class="question-card" data-question-id="{{ question.id }}">
                     <!-- Question Header -->
-                    <div class="flex items-start mb-4">
-                        <span class="text-lg font-medium flex-1">
-                            {{ forloop.counter }}. {{ question.text }}
-                            {% if question.is_required %}
-                                <span class="required-indicator">*</span>
-                            {% endif %}
+                    <div class="flex items-start gap-4 mb-6">
+                        <span class="question-number flex-shrink-0">
+                            {{ forloop.counter }}
                         </span>
-                        <span class="badge badge-outline text-xs">{{ question.get_question_type_display }}</span>
+                        <div class="flex-1">
+                            <h3 class="text-xl font-bold text-base-content mb-2">
+                                {{ question.text }}
+                                {% if question.is_required %}
+                                    <span class="required-indicator ml-1">*</span>
+                                {% endif %}
+                            </h3>
+                            <div class="flex items-center gap-2">
+                                <span class="badge badge-primary badge-sm gap-1">
+                                    <i class="fas fa-tag"></i>
+                                    {{ question.get_question_type_display }}
+                                </span>
+                                {% if question.is_required %}
+                                    <span class="badge badge-error badge-sm gap-1">
+                                        <i class="fas fa-asterisk text-xs"></i>
+                                        Required
+                                    </span>
+                                {% endif %}
+                            </div>
+                        </div>
                     </div>
                     
                     <!-- Question Image -->
@@ -383,13 +465,34 @@
             {% endif %}
             
             <!-- Submit Button -->
-            <div class="text-center py-8">
-                <button type="submit" class="btn btn-primary btn-lg min-w-48">
-                    📤 Submit Survey
-                </button>
-                <p class="text-sm text-gray-500 mt-2">
-                    Your response will be recorded anonymously.
-                </p>
+            <div class="card bg-gradient-to-br from-primary/10 to-secondary/10 shadow-2xl border-2 border-primary/30">
+                <div class="card-body text-center p-10">
+                    <div class="mb-4">
+                        <i class="fas fa-paper-plane text-6xl text-primary"></i>
+                    </div>
+                    <h3 class="text-2xl font-bold mb-4">Ready to Submit?</h3>
+                    <p class="text-base-content/70 mb-6 max-w-md mx-auto">
+                        Please review your answers before submitting. Your response will be recorded securely and anonymously.
+                    </p>
+                    <button type="submit" class="btn btn-primary btn-lg gap-3 px-12 shadow-lg hover:shadow-xl transition-all">
+                        <i class="fas fa-check-circle text-2xl"></i>
+                        <span class="text-xl">Submit Survey</span>
+                    </button>
+                    <div class="flex items-center justify-center gap-4 mt-6 flex-wrap">
+                        <div class="badge badge-success gap-2">
+                            <i class="fas fa-shield-alt"></i>
+                            Secure
+                        </div>
+                        <div class="badge badge-info gap-2">
+                            <i class="fas fa-user-secret"></i>
+                            Anonymous
+                        </div>
+                        <div class="badge badge-warning gap-2">
+                            <i class="fas fa-lock"></i>
+                            Encrypted
+                        </div>
+                    </div>
+                </div>
             </div>
         </form>
     {% endif %}
