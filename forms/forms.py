@@ -1,6 +1,6 @@
 from django import forms
 from django.forms import formset_factory
-from .models import FormQuestion
+from .models import Form, FormQuestion
 
 
 class QuestionOptionForm(forms.Form):
@@ -91,3 +91,82 @@ QuestionOptionFormSet = formset_factory(
     min_num=0,
     validate_min=False
 )
+
+
+class FormEditForm(forms.ModelForm):
+    """Form for editing form details"""
+    
+    class Meta:
+        model = Form
+        fields = [
+            'title', 'description', 'password', 'require_captcha', 
+            'form_image', 'form_settings'
+        ]
+        widgets = {
+            'title': forms.TextInput(attrs={
+                'class': 'input input-bordered w-full',
+                'placeholder': 'Form title'
+            }),
+            'description': forms.Textarea(attrs={
+                'class': 'textarea textarea-bordered w-full',
+                'rows': 4,
+                'placeholder': 'Describe what this form is for...'
+            }),
+            'password': forms.PasswordInput(attrs={
+                'class': 'input input-bordered w-full',
+                'placeholder': 'Optional password protection'
+            }),
+            'require_captcha': forms.CheckboxInput(attrs={
+                'class': 'checkbox checkbox-primary'
+            }),
+            'form_image': forms.FileInput(attrs={
+                'class': 'file-input file-input-bordered w-full',
+                'accept': 'image/*'
+            }),
+        }
+    
+    # Additional settings fields
+    unique_entries = forms.BooleanField(
+        required=False,
+        widget=forms.CheckboxInput(attrs={'class': 'checkbox checkbox-primary'}),
+        help_text="Prevent duplicate submissions from the same user"
+    )
+    
+    enable_identity = forms.BooleanField(
+        required=False,
+        widget=forms.CheckboxInput(attrs={'class': 'checkbox checkbox-primary'}),
+        help_text="Collect identity information (name, phone, etc.)"
+    )
+    
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        
+        # Add help text
+        self.fields['title'].help_text = "The title that will be displayed to users"
+        self.fields['description'].help_text = "A brief description of the form's purpose"
+        self.fields['password'].help_text = "Leave blank for no password protection"
+        self.fields['require_captcha'].help_text = "Helps prevent spam submissions"
+        self.fields['form_image'].help_text = "Header image for the form (optional)"
+        
+        # Load settings from form_settings JSON field
+        if self.instance and self.instance.pk and self.instance.form_settings:
+            settings = self.instance.form_settings
+            self.fields['unique_entries'].initial = settings.get('unique_entries', False)
+            self.fields['enable_identity'].initial = settings.get('enable_identity', True)
+    
+    def save(self, commit=True):
+        instance = super().save(commit=False)
+        
+        # Save additional settings to form_settings JSON field
+        if not instance.form_settings:
+            instance.form_settings = {}
+        
+        instance.form_settings.update({
+            'unique_entries': self.cleaned_data.get('unique_entries', False),
+            'enable_identity': self.cleaned_data.get('enable_identity', True),
+        })
+        
+        if commit:
+            instance.save()
+        
+        return instance

@@ -3,53 +3,283 @@
 {% block title %}Edit Form - {{ form.title }}{% endblock %}
 
 {% block content %}
-<div class="hero min-h-[60vh] bg-base-200 rounded-lg">
-    <div class="hero-content text-center">
-        <div class="max-w-md">
-            <div class="flex justify-center mb-6">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-24 w-24 text-secondary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                </svg>
+<div class="container mx-auto px-4 py-8">
+    <div class="max-w-4xl mx-auto">
+        <!-- Header -->
+        <div class="mb-8">
+            <div class="flex items-center gap-4 mb-4">
+                <a href="{% url 'forms:detail' object.pk %}" class="btn btn-ghost btn-circle">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+                    </svg>
+                </a>
+                <div>
+                    <h1 class="text-3xl font-bold">Edit Form</h1>
+                    <p class="text-base-content/70">Configure your form settings and options</p>
+                </div>
             </div>
-            <h1 class="text-5xl font-bold mb-4">Coming Soon</h1>
-            <h2 class="text-2xl font-semibold text-secondary mb-4">Form Editor</h2>
-            <p class="py-6 text-lg">
-                The advanced form editor will provide a comprehensive interface for editing form details, 
-                settings, and structure. You'll be able to manage all aspects of your form in one place.
-            </p>
             
-            <div class="alert alert-info shadow-lg mb-6">
+            <div class="alert alert-info shadow-lg">
                 <svg xmlns="http://www.w3.org/2000/svg" class="stroke-current flex-shrink-0 h-6 w-6" fill="none" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
                 </svg>
-                <div class="text-left">
-                    <p class="font-bold">Form: {{ object.title }}</p>
-                    <p class="text-sm">Status: {{ object.get_status_display }}</p>
+                <div>
+                    <h3 class="font-bold">Current Form: {{ object.title }}</h3>
+                    <div class="text-xs">
+                        Status: <span class="badge badge-sm">{{ object.get_status_display }}</span>
+                        • Created: {{ object.created_at|date:"M d, Y" }}
+                        • Last updated: {{ object.updated_at|date:"M d, Y g:i A" }}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Form -->
+        <form method="post" enctype="multipart/form-data" class="space-y-8">
+            {% csrf_token %}
+            
+            <!-- Basic Information Card -->
+            <div class="card bg-base-100 shadow-xl">
+                <div class="card-body">
+                    <h2 class="card-title text-xl mb-4">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                        </svg>
+                        Basic Information
+                    </h2>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div class="md:col-span-2">
+                            <label class="label" for="{{ form.title.id_for_label }}">
+                                <span class="label-text font-semibold">{{ form.title.label }}</span>
+                            </label>
+                            {{ form.title }}
+                            {% if form.title.help_text %}
+                                <label class="label">
+                                    <span class="label-text-alt">{{ form.title.help_text }}</span>
+                                </label>
+                            {% endif %}
+                            {% if form.title.errors %}
+                                <label class="label">
+                                    <span class="label-text-alt text-error">{{ form.title.errors.0 }}</span>
+                                </label>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="md:col-span-2">
+                            <label class="label" for="{{ form.description.id_for_label }}">
+                                <span class="label-text font-semibold">{{ form.description.label }}</span>
+                            </label>
+                            {{ form.description }}
+                            {% if form.description.help_text %}
+                                <label class="label">
+                                    <span class="label-text-alt">{{ form.description.help_text }}</span>
+                                </label>
+                            {% endif %}
+                            {% if form.description.errors %}
+                                <label class="label">
+                                    <span class="label-text-alt text-error">{{ form.description.errors.0 }}</span>
+                                </label>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="md:col-span-2">
+                            <label class="label" for="{{ form.form_image.id_for_label }}">
+                                <span class="label-text font-semibold">{{ form.form_image.label }}</span>
+                            </label>
+                            {{ form.form_image }}
+                            {% if form.form_image.help_text %}
+                                <label class="label">
+                                    <span class="label-text-alt">{{ form.form_image.help_text }}</span>
+                                </label>
+                            {% endif %}
+                            {% if object.form_image %}
+                                <label class="label">
+                                    <span class="label-text-alt">Current: <a href="{{ object.form_image.url }}" target="_blank" class="link">{{ object.form_image.name }}</a></span>
+                                </label>
+                            {% endif %}
+                            {% if form.form_image.errors %}
+                                <label class="label">
+                                    <span class="label-text-alt text-error">{{ form.form_image.errors.0 }}</span>
+                                </label>
+                            {% endif %}
+                        </div>
+                    </div>
                 </div>
             </div>
 
-            <div class="space-y-3 text-left mb-6">
-                <h3 class="font-bold text-lg">Planned Features:</h3>
-                <ul class="list-disc list-inside space-y-2 text-base-content/70">
-                    <li>Edit form title and description</li>
-                    <li>Configure security settings (password, CAPTCHA)</li>
-                    <li>Manage master data attachments</li>
-                    <li>Set response options (unique/duplicate entries)</li>
-                    <li>Customize identity section settings</li>
-                    <li>Configure notification preferences</li>
-                </ul>
+            <!-- Security Settings Card -->
+            <div class="card bg-base-100 shadow-xl">
+                <div class="card-body">
+                    <h2 class="card-title text-xl mb-4">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                        </svg>
+                        Security Settings
+                    </h2>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div>
+                            <label class="label" for="{{ form.password.id_for_label }}">
+                                <span class="label-text font-semibold">{{ form.password.label }}</span>
+                            </label>
+                            {{ form.password }}
+                            {% if form.password.help_text %}
+                                <label class="label">
+                                    <span class="label-text-alt">{{ form.password.help_text }}</span>
+                                </label>
+                            {% endif %}
+                            {% if form.password.errors %}
+                                <label class="label">
+                                    <span class="label-text-alt text-error">{{ form.password.errors.0 }}</span>
+                                </label>
+                            {% endif %}
+                        </div>
+                        
+                        <div>
+                            <label class="label">
+                                <span class="label-text font-semibold">CAPTCHA Protection</span>
+                            </label>
+                            <div class="form-control">
+                                <label class="label cursor-pointer justify-start gap-3">
+                                    {{ form.require_captcha }}
+                                    <span class="label-text">{{ form.require_captcha.label }}</span>
+                                </label>
+                                {% if form.require_captcha.help_text %}
+                                    <label class="label">
+                                        <span class="label-text-alt">{{ form.require_captcha.help_text }}</span>
+                                    </label>
+                                {% endif %}
+                                {% if form.require_captcha.errors %}
+                                    <label class="label">
+                                        <span class="label-text-alt text-error">{{ form.require_captcha.errors.0 }}</span>
+                                    </label>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
-            
-            <div class="flex gap-3 justify-center">
-                <a href="{% url 'forms:detail' object.pk %}" class="btn btn-primary">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
-                    </svg>
-                    Back to Form Details
-                </a>
-                <a href="{% url 'forms:list' %}" class="btn btn-outline">View All Forms</a>
+
+            <!-- Form Behavior Settings Card -->
+            <div class="card bg-base-100 shadow-xl">
+                <div class="card-body">
+                    <h2 class="card-title text-xl mb-4">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                        </svg>
+                        Form Behavior
+                    </h2>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div>
+                            <label class="label">
+                                <span class="label-text font-semibold">Submission Control</span>
+                            </label>
+                            <div class="form-control">
+                                <label class="label cursor-pointer justify-start gap-3">
+                                    {{ form.unique_entries }}
+                                    <span class="label-text">{{ form.unique_entries.label }}</span>
+                                </label>
+                                {% if form.unique_entries.help_text %}
+                                    <label class="label">
+                                        <span class="label-text-alt">{{ form.unique_entries.help_text }}</span>
+                                    </label>
+                                {% endif %}
+                                {% if form.unique_entries.errors %}
+                                    <label class="label">
+                                        <span class="label-text-alt text-error">{{ form.unique_entries.errors.0 }}</span>
+                                    </label>
+                                {% endif %}
+                            </div>
+                        </div>
+                        
+                        <div>
+                            <label class="label">
+                                <span class="label-text font-semibold">Identity Collection</span>
+                            </label>
+                            <div class="form-control">
+                                <label class="label cursor-pointer justify-start gap-3">
+                                    {{ form.enable_identity }}
+                                    <span class="label-text">{{ form.enable_identity.label }}</span>
+                                </label>
+                                {% if form.enable_identity.help_text %}
+                                    <label class="label">
+                                        <span class="label-text-alt">{{ form.enable_identity.help_text }}</span>
+                                    </label>
+                                {% endif %}
+                                {% if form.enable_identity.errors %}
+                                    <label class="label">
+                                        <span class="label-text-alt text-error">{{ form.enable_identity.errors.0 }}</span>
+                                    </label>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="flex flex-col sm:flex-row gap-4 justify-between items-center pt-4">
+                <div class="flex gap-2">
+                    <a href="{% url 'forms:detail' object.pk %}" class="btn btn-ghost">
+                        Cancel
+                    </a>
+                </div>
+                
+                <div class="flex gap-2">
+                    <button type="submit" class="btn btn-primary">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                        </svg>
+                        Save Changes
+                    </button>
+                </div>
+            </div>
+        </form>
+        
+        <!-- Additional Actions -->
+        <div class="mt-8 pt-8 border-t border-base-300">
+            <div class="alert alert-warning">
+                <svg xmlns="http://www.w3.org/2000/svg" class="stroke-current flex-shrink-0 h-6 w-6" fill="none" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
+                </svg>
+                <div>
+                    <h3 class="font-bold">Additional Configuration</h3>
+                    <div class="text-sm">Need to configure more advanced settings?</div>
+                </div>
+                <div class="flex-none">
+                    <a href="{% url 'forms:questions' object.pk %}" class="btn btn-sm btn-ghost">
+                        Edit Questions
+                    </a>
+                    <a href="{% url 'forms:master_data_available' object.pk %}" class="btn btn-sm btn-ghost">
+                        Master Data
+                    </a>
+                </div>
             </div>
         </div>
     </div>
 </div>
+
+<script>
+// Auto-save draft functionality could be added here
+document.addEventListener('DOMContentLoaded', function() {
+    // Password field toggle
+    const passwordField = document.getElementById('{{ form.password.id_for_label }}');
+    if (passwordField) {
+        passwordField.addEventListener('input', function() {
+            // Could add password strength indicator here
+        });
+    }
+    
+    // Form validation feedback
+    const form = document.querySelector('form');
+    form.addEventListener('submit', function(e) {
+        const btn = form.querySelector('button[type="submit"]');
+        btn.innerHTML = '<span class="loading loading-spinner"></span> Saving...';
+        btn.disabled = true;
+    });
+});
+</script>
 {% endblock %}

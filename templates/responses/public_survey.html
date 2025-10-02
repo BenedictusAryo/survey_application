@@ -63,6 +63,103 @@
         color: #ef4444;
         font-weight: bold;
     }
+    
+    /* Captcha styling */
+    .captcha-container {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 2rem;
+        padding: 2rem;
+        background: #f1f5f9;
+        border: 3px solid #cbd5e1;
+        border-radius: 1rem;
+        box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+        margin: 1rem 0;
+    }
+    
+    .captcha-image {
+        max-width: 600px !important;
+        min-width: 400px !important;
+        height: auto !important;
+        border: 3px solid #64748b;
+        border-radius: 0.75rem;
+        box-shadow: 0 6px 12px rgba(0,0,0,0.15);
+        background: white;
+        padding: 1rem;
+        margin-bottom: 1.5rem;
+    }
+    
+    .captcha-field {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        width: 100%;
+        margin-top: 1.5rem;
+    }
+    
+    .captcha-input {
+        width: 300px !important;
+        max-width: 90%;
+        padding: 1.25rem !important;
+        border: 3px solid #64748b !important;
+        border-radius: 0.75rem !important;
+        font-size: 1.5rem !important;
+        text-align: center !important;
+        font-weight: 700 !important;
+        letter-spacing: 0.2em !important;
+        background: white !important;
+        color: #1e293b !important;
+        box-shadow: 0 4px 6px rgba(0,0,0,0.1) !important;
+        transition: all 0.3s !important;
+        margin: 0 auto !important;
+        display: block !important;
+    }
+    
+    .captcha-input:focus {
+        outline: none !important;
+        border-color: #3b82f6 !important;
+        box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.25), 0 4px 6px rgba(0,0,0,0.1) !important;
+        transform: scale(1.02) !important;
+    }
+    
+    .captcha-input::placeholder {
+        color: #94a3b8 !important;
+        font-weight: 500 !important;
+        letter-spacing: 0.1em !important;
+    }
+    
+    .captcha-label {
+        font-weight: 600;
+        color: #374151;
+        margin-bottom: 1rem;
+        font-size: 1.1rem;
+        text-align: center;
+    }
+    
+    .captcha-refresh {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        color: #3b82f6;
+        text-decoration: none;
+        font-size: 1rem;
+        font-weight: 600;
+        padding: 0.75rem 1.5rem;
+        border: 2px solid #3b82f6;
+        border-radius: 0.5rem;
+        background: white;
+        transition: all 0.2s;
+        margin-top: 1rem;
+    }
+    
+    .captcha-refresh:hover {
+        background-color: #3b82f6;
+        color: white;
+        text-decoration: none;
+        transform: translateY(-1px);
+        box-shadow: 0 4px 8px rgba(59, 130, 246, 0.3);
+    }
 </style>
 {% endblock %}
 
@@ -244,12 +341,17 @@
             {% if survey_form.require_captcha %}
                 <div class="question-card">
                     <h3 class="text-lg font-medium mb-4">🔐 Security Verification</h3>
-                    <div class="form-control">
-                        {{ form.captcha.label_tag }}
-                        {{ form.captcha }}
+                    <div class="captcha-container">
+                        <div class="captcha-label">{{ form.captcha.label_tag }}</div>
+                        <div class="captcha-field">
+                            {{ form.captcha }}
+                        </div>
                         {% if form.captcha.errors %}
                             <div class="text-error text-sm mt-1">{{ form.captcha.errors.0 }}</div>
                         {% endif %}
+                        <p class="text-sm text-gray-600 text-center">
+                            Please enter the characters shown in the image above
+                        </p>
                     </div>
                 </div>
             {% endif %}
@@ -443,6 +545,45 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         });
     }
+    
+    // Style captcha elements
+    function styleCaptcha() {
+        // Find captcha image and apply styles
+        const captchaImg = document.querySelector('img[src*="captcha"]');
+        if (captchaImg) {
+            captchaImg.className = 'captcha-image';
+        }
+        
+        // Find captcha input field and apply styles
+        const captchaInput = document.querySelector('input[name*="captcha"]');
+        if (captchaInput) {
+            captchaInput.className = 'captcha-input';
+            captchaInput.placeholder = 'Enter code here';
+        }
+        
+        // Find and style captcha refresh link
+        const captchaRefresh = document.querySelector('a[href*="captcha"]');
+        if (captchaRefresh) {
+            captchaRefresh.className = 'captcha-refresh';
+            captchaRefresh.innerHTML = '🔄 Get new code';
+        }
+        
+        // Hide the original label if it exists and style it
+        const captchaLabel = document.querySelector('label[for*="captcha"]');
+        if (captchaLabel) {
+            captchaLabel.style.display = 'none';
+        }
+    }
+    
+    // Apply captcha styling when page loads
+    styleCaptcha();
+    
+    // Re-apply styling after captcha refresh (if using AJAX refresh)
+    document.addEventListener('click', function(e) {
+        if (e.target.closest('a[href*="captcha"]')) {
+            setTimeout(styleCaptcha, 500); // Delay to allow new captcha to load
+        }
+    });
 });
 </script>
 {% endblock %}

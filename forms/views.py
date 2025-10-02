@@ -9,7 +9,7 @@ from django.http import JsonResponse
 from django.db import models
  
 from .models import Form, FormQuestion, FormMasterDataAttachment
-from .forms import FormQuestionForm
+from .forms import FormQuestionForm, FormEditForm
 
 class FormListView(LoginRequiredMixin, ListView):
     model = Form
@@ -55,9 +55,20 @@ class FormDetailView(LoginRequiredMixin, DetailView):
 
 class FormEditView(LoginRequiredMixin, UpdateView):
     model = Form
-    fields = ['title', 'description']
+    form_class = FormEditForm
     template_name = 'forms/edit.html'
     context_object_name = 'form'
+    
+    def get_queryset(self):
+        # Ensure user can only edit their own forms or forms they collaborate on
+        return Form.objects.filter(
+            models.Q(owner=self.request.user) | 
+            models.Q(editors=self.request.user)
+        ).distinct()
+    
+    def form_valid(self, form):
+        messages.success(self.request, f'Form "{form.instance.title}" updated successfully!')
+        return super().form_valid(form)
     
     def get_success_url(self):
         return reverse_lazy('forms:detail', kwargs={'pk': self.object.pk})
