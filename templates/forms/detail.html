@@ -3,145 +3,224 @@
 {% block title %}{{ form.title }} - Form Details{% endblock %}
 
 {% block content %}
-<div class="flex justify-between items-center mb-6">
-    <div>
-        <h1 class="text-3xl font-bold">{{ form.title }}</h1>
-        <p class="text-gray-600">{{ form.description }}</p>
-    </div>
-    <div class="flex gap-2">
-        <a href="{% url 'forms:edit' form.pk %}" class="btn btn-outline btn-sm">Edit Details</a>
-        <a href="{% url 'forms:questions' form.pk %}" class="btn btn-primary btn-sm">Manage Questions</a>
-        <a href="{% url 'forms:publish' form.pk %}" class="btn {% if form.status == 'published' %}btn-success{% else %}btn-warning{% endif %} btn-sm">
+<!-- Header Section -->
+<div class="mb-8">
+    <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+        <div class="flex-1">
+            <div class="breadcrumbs text-sm mb-2">
+                <ul>
+                    <li><a href="{% url 'forms:list' %}"><i class="fas fa-home"></i> Forms</a></li>
+                    <li class="text-primary">{{ form.title }}</li>
+                </ul>
+            </div>
+            <h1 class="text-3xl lg:text-4xl font-bold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent mb-2">
+                {{ form.title }}
+            </h1>
+            <p class="text-base-content/70 text-lg">{{ form.description }}</p>
+        </div>
+        <div class="flex flex-wrap gap-2">
+            <a href="{% url 'forms:edit' form.pk %}" class="btn btn-outline gap-2">
+                <i class="fas fa-edit"></i>
+                <span class="hidden sm:inline">Edit Details</span>
+            </a>
+            <a href="{% url 'forms:questions' form.pk %}" class="btn btn-primary gap-2">
+                <i class="fas fa-list"></i>
+                <span class="hidden sm:inline">Manage Questions</span>
+            </a>
+            <a href="{% url 'forms:publish' form.pk %}" class="btn {% if form.status == 'published' %}btn-success{% else %}btn-warning{% endif %} gap-2">
+                <i class="fas fa-{% if form.status == 'published' %}check-circle{% else %}upload{% endif %}"></i>
+                <span class="hidden sm:inline">{% if form.status == 'published' %}Published{% else %}Publish{% endif %}</span>
+            </a>
             {% if form.status == 'published' %}
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
-                </svg>
-                Published
-            {% else %}
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
-                </svg>
-                Publish
+                <a href="{% url 'forms:qr_code' form.slug %}" class="btn btn-secondary gap-2">
+                    <i class="fas fa-qrcode"></i>
+                    <span class="hidden sm:inline">QR Code</span>
+                </a>
             {% endif %}
-        </a>
-        {% if form.status == 'published' %}
-            <a href="{% url 'forms:qr_code' form.slug %}" class="btn btn-secondary btn-sm">QR Code</a>
-        {% endif %}
+        </div>
     </div>
 </div>
 
-<!-- Status and Statistics Cards -->
-<div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-    <div class="card bg-base-100 shadow-xl">
-        <div class="card-body">
-            <h3 class="text-sm text-gray-500 uppercase">Status</h3>
-            <div class="badge badge-{{ form.status }} badge-lg">{{ form.get_status_display }}</div>
+<!-- Statistics Cards -->
+<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-6 mb-8">
+    <!-- Status Card -->
+    <div class="stats shadow bg-base-100 border border-base-300">
+        <div class="stat">
+            <div class="stat-figure text-{% if form.status == 'published' %}success{% else %}warning{% endif %}">
+                <i class="fas fa-{% if form.status == 'published' %}check-circle{% else %}clock{% endif %} text-3xl"></i>
+            </div>
+            <div class="stat-title">Status</div>
+            <div class="stat-value text-{% if form.status == 'published' %}success{% else %}warning{% endif %} text-2xl">
+                {{ form.get_status_display }}
+            </div>
             {% if form.status == 'published' %}
-                <div class="mt-2">
-                    <a href="/survey/{{ form.slug }}/" target="_blank" class="btn btn-xs btn-outline">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
-                        </svg>
-                        View Public Form
+                <div class="stat-actions mt-2">
+                    <a href="/survey/{{ form.slug }}/" target="_blank" class="btn btn-xs btn-success gap-1">
+                        <i class="fas fa-external-link-alt"></i>
+                        View Public
                     </a>
                 </div>
             {% endif %}
         </div>
     </div>
     
-    <div class="card bg-base-100 shadow-xl">
-        <div class="card-body">
-            <h3 class="text-sm text-gray-500 uppercase">Responses</h3>
-            <p class="text-3xl font-bold">{{ response_count }}</p>
+    <!-- Responses Card -->
+    <div class="stats shadow bg-base-100 border border-base-300">
+        <div class="stat">
+            <div class="stat-figure text-primary">
+                <i class="fas fa-comments text-3xl"></i>
+            </div>
+            <div class="stat-title">Responses</div>
+            <div class="stat-value text-primary">{{ response_count }}</div>
+            <div class="stat-desc">Total submissions</div>
         </div>
     </div>
     
-    <div class="card bg-base-100 shadow-xl">
-        <div class="card-body">
-            <h3 class="text-sm text-gray-500 uppercase">Questions</h3>
-            <p class="text-3xl font-bold">{{ questions.count }}</p>
+    <!-- Questions Card -->
+    <div class="stats shadow bg-base-100 border border-base-300">
+        <div class="stat">
+            <div class="stat-figure text-secondary">
+                <i class="fas fa-question-circle text-3xl"></i>
+            </div>
+            <div class="stat-title">Questions</div>
+            <div class="stat-value text-secondary">{{ questions.count }}</div>
+            <div class="stat-desc">Form fields</div>
         </div>
     </div>
     
-    <div class="card bg-base-100 shadow-xl">
-        <div class="card-body">
-            <h3 class="text-sm text-gray-500 uppercase">Last Updated</h3>
-            <p class="text-sm font-semibold">{{ form.updated_at|date:"M d, Y" }}</p>
-            <p class="text-xs text-gray-500">{{ form.updated_at|time:"h:i A" }}</p>
+    <!-- Last Updated Card -->
+    <div class="stats shadow bg-base-100 border border-base-300">
+        <div class="stat">
+            <div class="stat-figure text-accent">
+                <i class="fas fa-calendar-alt text-3xl"></i>
+            </div>
+            <div class="stat-title">Last Updated</div>
+            <div class="stat-value text-accent text-lg">{{ form.updated_at|date:"M d" }}</div>
+            <div class="stat-desc">{{ form.updated_at|time:"h:i A" }}</div>
         </div>
     </div>
 </div>
 
 <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-    <!-- Master Data Attachments -->
-    <div class="lg:col-span-1">
-        <div class="card bg-base-100 shadow-xl">
+    <!-- Sidebar: Master Data & Collaborators -->
+    <div class="lg:col-span-1 space-y-6">
+        <!-- Master Data Attachments Card -->
+        <div class="card bg-base-100 shadow-xl border border-base-300 hover:shadow-2xl transition-all duration-300">
             <div class="card-body">
-                <h2 class="card-title">Master Data Sets</h2>
+                <div class="flex items-center gap-3 mb-4">
+                    <div class="p-3 bg-primary/10 rounded-lg">
+                        <i class="fas fa-database text-2xl text-primary"></i>
+                    </div>
+                    <h2 class="card-title text-xl">Master Data Sets</h2>
+                </div>
                 
                 {% include 'forms/partials/master_data_attachments.html' with master_data_attachments=master_data_attachments %}
                 
-                <div class="divider">Actions</div>
-                <button class="btn btn-primary btn-sm w-full" onclick="openAttachModal()">Attach Master Data</button>
+                <div class="divider my-2"></div>
+                <button class="btn btn-primary gap-2 w-full" onclick="openAttachModal()">
+                    <i class="fas fa-plus-circle"></i>
+                    Attach Master Data
+                </button>
             </div>
         </div>
         
-        <!-- Collaborators -->
-        <div class="card bg-base-100 shadow-xl mt-6">
+        <!-- Collaborators Card -->
+        <div class="card bg-base-100 shadow-xl border border-base-300 hover:shadow-2xl transition-all duration-300">
             <div class="card-body">
-                <h2 class="card-title">Collaborators</h2>
+                <div class="flex items-center gap-3 mb-4">
+                    <div class="p-3 bg-secondary/10 rounded-lg">
+                        <i class="fas fa-users text-2xl text-secondary"></i>
+                    </div>
+                    <h2 class="card-title text-xl">Collaborators</h2>
+                </div>
                 
                 <div class="space-y-2 mb-4">
-                    <div class="flex items-center p-2 bg-base-200 rounded">
-                        <div>
+                    <div class="flex items-center justify-between p-3 bg-gradient-to-r from-primary/10 to-primary/5 rounded-lg border border-primary/20">
+                        <div class="flex items-center gap-2">
+                            <div class="avatar placeholder">
+                                <div class="bg-primary text-primary-content rounded-full w-8">
+                                    <span class="text-xs">{{ form.owner.username|first|upper }}</span>
+                                </div>
+                            </div>
                             <span class="font-medium">{{ form.owner.username }}</span>
-                            <span class="badge badge-primary badge-xs ml-2">Owner</span>
                         </div>
+                        <span class="badge badge-primary gap-1">
+                            <i class="fas fa-crown text-xs"></i>
+                            Owner
+                        </span>
                     </div>
                     {% for editor in collaborators %}
-                        <div class="flex justify-between items-center p-2 bg-base-200 rounded">
-                            <span class="font-medium">{{ editor.username }}</span>
-                            <span class="badge badge-secondary badge-xs">Editor</span>
+                        <div class="flex items-center justify-between p-3 bg-base-200 rounded-lg hover:bg-base-300 transition-colors">
+                            <div class="flex items-center gap-2">
+                                <div class="avatar placeholder">
+                                    <div class="bg-secondary text-secondary-content rounded-full w-8">
+                                        <span class="text-xs">{{ editor.username|first|upper }}</span>
+                                    </div>
+                                </div>
+                                <span class="font-medium">{{ editor.username }}</span>
+                            </div>
+                            <span class="badge badge-secondary badge-sm">Editor</span>
                         </div>
                     {% endfor %}
                 </div>
                 
-                <button class="btn btn-outline btn-sm w-full" onclick="inviteCollaborator()">Invite Collaborator</button>
+                <button class="btn btn-outline btn-secondary gap-2 w-full" onclick="inviteCollaborator()">
+                    <i class="fas fa-user-plus"></i>
+                    Invite Collaborator
+                </button>
             </div>
         </div>
     </div>
     
-    <!-- Questions List -->
-    <div class="lg:col-span-2">
-        <div class="card bg-base-100 shadow-xl">
+    <!-- Main Content: Questions & Actions -->
+    <div class="lg:col-span-2 space-y-6">
+        <!-- Questions Card -->
+        <div class="card bg-base-100 shadow-xl border border-base-300 hover:shadow-2xl transition-all duration-300">
             <div class="card-body">
-                <div class="flex justify-between items-center mb-4">
-                    <h2 class="card-title">Questions</h2>
-                    <a href="{% url 'forms:questions' form.pk %}" class="btn btn-primary btn-sm">Manage Questions</a>
+                <div class="flex items-center justify-between mb-6">
+                    <div class="flex items-center gap-3">
+                        <div class="p-3 bg-accent/10 rounded-lg">
+                            <i class="fas fa-list-ul text-2xl text-accent"></i>
+                        </div>
+                        <h2 class="card-title text-2xl">Questions</h2>
+                    </div>
+                    <a href="{% url 'forms:questions' form.pk %}" class="btn btn-primary gap-2">
+                        <i class="fas fa-cog"></i>
+                        Manage
+                    </a>
                 </div>
                 
                 {% if questions %}
                     <div class="space-y-3">
                         {% for question in questions %}
-                            <div class="p-4 border border-base-300 rounded-lg hover:bg-base-200 transition">
-                                <div class="flex justify-between items-start">
+                            <div class="p-5 border-2 border-base-300 rounded-xl hover:border-primary/30 hover:bg-base-200/50 transition-all duration-300 group">
+                                <div class="flex items-start gap-3">
+                                    <div class="flex-shrink-0">
+                                        <div class="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center font-bold text-primary">
+                                            {{ question.order }}
+                                        </div>
+                                    </div>
                                     <div class="flex-1">
-                                        <div class="flex items-center gap-2 mb-2">
-                                            <span class="badge badge-outline badge-sm">Q{{ question.order }}</span>
-                                            <span class="badge badge-sm">{{ question.get_question_type_display }}</span>
+                                        <div class="flex flex-wrap items-center gap-2 mb-3">
+                                            <span class="badge badge-primary badge-sm">{{ question.get_question_type_display }}</span>
                                             {% if question.is_required %}
-                                                <span class="badge badge-error badge-xs">Required</span>
+                                                <span class="badge badge-error badge-sm gap-1">
+                                                    <i class="fas fa-asterisk text-xs"></i>
+                                                    Required
+                                                </span>
+                                            {% endif %}
+                                            {% if question.logic %}
+                                                <span class="badge badge-info badge-sm gap-1">
+                                                    <i class="fas fa-code-branch text-xs"></i>
+                                                    Conditional
+                                                </span>
                                             {% endif %}
                                         </div>
-                                        <p class="font-medium">{{ question.text }}</p>
+                                        <p class="font-semibold text-lg mb-2">{{ question.text }}</p>
                                         {% if question.question_type == 'single_select' or question.question_type == 'multi_select' %}
-                                            <div class="mt-2 text-sm text-gray-500">
-                                                Options: {{ question.options|length }}
-                                            </div>
-                                        {% endif %}
-                                        {% if question.logic %}
-                                            <div class="mt-2">
-                                                <span class="badge badge-info badge-xs">Has conditional logic</span>
+                                            <div class="flex items-center gap-2 text-sm text-base-content/60">
+                                                <i class="fas fa-list"></i>
+                                                <span>{{ question.options|length }} option{{ question.options|length|pluralize }}</span>
                                             </div>
                                         {% endif %}
                                     </div>
@@ -150,71 +229,67 @@
                         {% endfor %}
                     </div>
                 {% else %}
-                    <div class="text-center py-8">
-                        <p class="text-gray-500 mb-4">No questions added yet.</p>
-                        <a href="{% url 'forms:questions' form.pk %}" class="btn btn-primary btn-sm">Add Your First Question</a>
+                    <div class="text-center py-16">
+                        <div class="inline-block p-4 bg-base-200 rounded-full mb-4">
+                            <i class="fas fa-question-circle text-5xl text-base-content/30"></i>
+                        </div>
+                        <p class="text-base-content/60 mb-6 text-lg">No questions added yet.</p>
+                        <a href="{% url 'forms:questions' form.pk %}" class="btn btn-primary btn-lg gap-2">
+                            <i class="fas fa-plus-circle"></i>
+                            Add Your First Question
+                        </a>
                     </div>
                 {% endif %}
             </div>
         </div>
         
-        <!-- Form Actions -->
-        <div class="card bg-base-100 shadow-xl mt-6">
+        <!-- Form Actions Card -->
+        <div class="card bg-base-100 shadow-xl border border-base-300 hover:shadow-2xl transition-all duration-300">
             <div class="card-body">
-                <h2 class="card-title">Form Actions</h2>
+                <div class="flex items-center gap-3 mb-6">
+                    <div class="p-3 bg-info/10 rounded-lg">
+                        <i class="fas fa-bolt text-2xl text-info"></i>
+                    </div>
+                    <h2 class="card-title text-2xl">Quick Actions</h2>
+                </div>
                 
-                <div class="grid grid-cols-2 gap-3">
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     {% if form.status == 'draft' %}
-                        <a href="{% url 'forms:publish' form.pk %}" class="btn btn-success btn-sm">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-                            </svg>
+                        <a href="{% url 'forms:publish' form.pk %}" class="btn btn-success gap-2 btn-lg">
+                            <i class="fas fa-rocket"></i>
                             Publish Form
                         </a>
                     {% elif form.status == 'published' %}
-                        <button class="btn btn-warning btn-sm" onclick="unpublishForm()">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21" />
-                            </svg>
-                            Unpublish
+                        <button class="btn btn-warning gap-2" onclick="unpublishForm()">
+                            <i class="fas fa-eye-slash"></i>
+                            <span class="hidden sm:inline">Unpublish</span>
                         </button>
                     {% endif %}
                     
-                    <a href="{% url 'forms:responses' form.pk %}" class="btn btn-info btn-sm">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" />
-                        </svg>
-                        View Responses
+                    <a href="{% url 'forms:responses' form.pk %}" class="btn btn-info gap-2">
+                        <i class="fas fa-chart-bar"></i>
+                        <span class="hidden sm:inline">View</span> Responses
                     </a>
                     
                     {% if form.status == 'published' %}
-                        <button class="btn btn-secondary btn-sm" onclick="copyPublicLink()">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
-                            </svg>
+                        <button class="btn btn-secondary gap-2" onclick="copyPublicLink()">
+                            <i class="fas fa-link"></i>
                             Copy Link
                         </button>
                         
-                        <button class="btn btn-success btn-sm" onclick="shareToWhatsApp()">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="currentColor" viewBox="0 0 24 24">
-                                <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/>
-                            </svg>
-                            Share WhatsApp
+                        <button class="btn btn-success gap-2" onclick="shareToWhatsApp()">
+                            <i class="fab fa-whatsapp"></i>
+                            Share
                         </button>
                     {% endif %}
                     
-                    <button class="btn btn-outline btn-sm" onclick="duplicateForm()">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
-                        </svg>
+                    <button class="btn btn-outline gap-2" onclick="duplicateForm()">
+                        <i class="fas fa-copy"></i>
                         Duplicate
                     </button>
                     
-                    <button class="btn btn-error btn-sm" onclick="deleteForm()">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                        </svg>
+                    <button class="btn btn-error btn-outline gap-2" onclick="deleteForm()">
+                        <i class="fas fa-trash-alt"></i>
                         Delete
                     </button>
                 </div>
