@@ -6,6 +6,11 @@
 
 /* Custom Styles for Survey Application */
 
+/* Typography - Plus Jakarta Sans */
+body {
+    font-family: 'Plus Jakarta Sans', sans-serif;
+}
+
 /* Enhanced card hover effects */
 .card-hover {
     transition: transform 0.2s ease, box-shadow 0.2s ease;
