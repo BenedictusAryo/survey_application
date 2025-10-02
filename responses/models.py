@@ -31,6 +31,20 @@ class Response(models.Model):
     ip_address = models.GenericIPAddressField(null=True, blank=True)
     user_agent = models.TextField(blank=True)
     
+    # New identity data (when user selects "Other")
+    is_new_identity = models.BooleanField(
+        default=False,
+        help_text="True if this response includes new identity data not in master data"
+    )
+    new_identity_data = models.JSONField(
+        null=True, blank=True,
+        help_text="New identity information when 'Other' is selected (not yet added to master data)"
+    )
+    new_identity_dataset_id = models.IntegerField(
+        null=True, blank=True,
+        help_text="ID of the dataset this new identity belongs to"
+    )
+    
     class Meta:
         ordering = ['-submitted_at']
     

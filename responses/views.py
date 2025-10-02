@@ -128,9 +128,11 @@ class PublicSurveyView(FormView):
     
     def handle_survey_submission(self, form_obj):
         """Handle the survey submission directly from POST data"""
-        # Check for master data selection or new record creation
+        # Check for master data selection or new identity data
         selected_record = None
         new_record_data = {}
+        is_new_identity = False
+        new_identity_dataset_id = None
         
         for key in self.request.POST.keys():
             if key.startswith('dataset_'):
@@ -143,7 +145,7 @@ class PublicSurveyView(FormView):
                     except (ValueError, MasterDataRecord.DoesNotExist):
                         continue
                 elif record_value == 'new':
-                    # Collect new record data
+                    # Collect new identity data (but don't create master data record)
                     for post_key in self.request.POST.keys():
                         if post_key.startswith(f'new_{dataset_id}_'):
                             column_name = post_key.replace(f'new_{dataset_id}_', '')
@@ -151,20 +153,19 @@ class PublicSurveyView(FormView):
                             if value:  # Only include non-empty values
                                 new_record_data[column_name] = value
                     
-                    # Create new record if we have data
+                    # Mark as new identity if we have data
                     if new_record_data:
-                        from master_data.models import MasterDataSet
-                        dataset = MasterDataSet.objects.get(id=dataset_id)
-                        selected_record = MasterDataRecord.objects.create(
-                            dataset=dataset,
-                            data=new_record_data
-                        )
-                        break  # Use the first valid new record
+                        is_new_identity = True
+                        new_identity_dataset_id = dataset_id
+                        break  # Use the first valid new identity
         
         # Create response record
         response = Response.objects.create(
             form=form_obj,
             record=selected_record,
+            is_new_identity=is_new_identity,
+            new_identity_data=new_record_data if is_new_identity else None,
+            new_identity_dataset_id=new_identity_dataset_id,
             session_key=self.request.session.session_key,
             ip_address=self.get_client_ip(),
             user_agent=self.request.META.get('HTTP_USER_AGENT', ''),

@@ -291,7 +291,7 @@ def export_responses_excel(request, pk):
     # Base response columns
     base_headers = [
         'response_id', 'submitted_at', 'updated_at', 'is_complete',
-        'user', 'record_id', 'record_display', 'ip_address', 'user_agent'
+        'user', 'record_id', 'record_display', 'is_new_identity', 'ip_address', 'user_agent'
     ]
 
     # Master data attachment columns (prefixed by dataset name)
@@ -337,15 +337,23 @@ def export_responses_excel(request, pk):
                 record_display = str(resp.record)
 
         row.append(record_display)
+        row.append('Yes (Pending Approval)' if (resp.is_new_identity and not resp.record) else ('Yes (Approved)' if (resp.is_new_identity and resp.record) else 'No'))
         row.append(resp.ip_address or '')
         row.append(resp.user_agent or '')
 
         # Master data columns values
         for attach, col, header in md_columns:
             value = ''
+            # Check if this response has a linked record
             if resp.record and resp.record.dataset_id == attach.dataset_id:
                 try:
                     value = resp.record.data.get(col.name, '')
+                except Exception:
+                    value = ''
+            # Check if this response has new identity data for this dataset
+            elif resp.is_new_identity and resp.new_identity_dataset_id == attach.dataset_id:
+                try:
+                    value = resp.new_identity_data.get(col.name, '')
                 except Exception:
                     value = ''
             row.append(value)

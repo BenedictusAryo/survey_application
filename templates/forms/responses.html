@@ -86,11 +86,16 @@
                                 <div class="text-xs text-gray-500">{{ response.submitted_at|time:"h:i A" }}</div>
                             </td>
                             <td>
-                                {% if response.is_complete %}
-                                    <span class="badge badge-success badge-sm">Complete</span>
-                                {% else %}
-                                    <span class="badge badge-warning badge-sm">Incomplete</span>
-                                {% endif %}
+                                <div class="flex flex-col gap-1">
+                                    {% if response.is_complete %}
+                                        <span class="badge badge-success badge-sm">Complete</span>
+                                    {% else %}
+                                        <span class="badge badge-warning badge-sm">Incomplete</span>
+                                    {% endif %}
+                                    {% if response.is_new_identity and not response.record %}
+                                        <span class="badge badge-info badge-sm">🆕 New Identity</span>
+                                    {% endif %}
+                                </div>
                             </td>
                             <td>
                                 {% if response.user %}
@@ -104,6 +109,13 @@
                                     </div>
                                 {% elif response.record %}
                                     <span class="text-sm">{{ response.record }}</span>
+                                {% elif response.is_new_identity and response.new_identity_data %}
+                                    <div class="text-sm">
+                                        <span class="text-orange-600 font-medium">New:</span>
+                                        {% for key, value in response.new_identity_data.items %}
+                                            {{ value }}{% if not forloop.last %}, {% endif %}
+                                        {% endfor %}
+                                    </div>
                                 {% else %}
                                     <span class="text-sm text-gray-500">Anonymous</span>
                                 {% endif %}
