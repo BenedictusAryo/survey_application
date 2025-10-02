@@ -144,7 +144,7 @@
                 <i class="fas fa-database text-3xl"></i>
             </div>
             <div class="stat-title">Master Data Sets</div>
-            <div class="stat-value text-primary">-</div>
+            <div class="stat-value text-primary">{{ total_datasets|default:0 }}</div>
             <div class="stat-desc">Centralized data records</div>
         </div>
         
@@ -153,7 +153,7 @@
                 <i class="fas fa-file-alt text-3xl"></i>
             </div>
             <div class="stat-title">Total Forms</div>
-            <div class="stat-value text-secondary">-</div>
+            <div class="stat-value text-secondary">{{ total_forms|default:0 }}</div>
             <div class="stat-desc">Published surveys</div>
         </div>
         
@@ -162,7 +162,7 @@
                 <i class="fas fa-chart-line text-3xl"></i>
             </div>
             <div class="stat-title">Responses</div>
-            <div class="stat-value text-accent">-</div>
+            <div class="stat-value text-accent">{{ total_responses|default:0 }}</div>
             <div class="stat-desc">Total submissions</div>
         </div>
     </div>
