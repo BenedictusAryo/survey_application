@@ -1,8 +1,68 @@
-<footer class="footer footer-center p-10 bg-base-200 text-base-content rounded">
-    <div class="grid grid-flow-col gap-4">
-        <p>Survey Application</p>
-    </div>
-    <div>
-        <p>Tim Data & IT - Paroki Bintaro</p>
+<footer class="footer bg-gradient-to-r from-primary to-secondary text-primary-content mt-20">
+    <div class="container mx-auto px-12 py-12">
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-8 text-center md:text-left">
+            <!-- Brand Section -->
+            <div class="flex flex-col items-center md:items-start">
+                {% load static %}
+                <div class="flex items-center gap-3 mb-4">
+                    <img src="{% static 'images/logo.png' %}" alt="Logo" class="h-12 w-auto drop-shadow-lg">
+                    <span class="text-2xl font-bold text-white">Survey App</span>
+                </div>
+                <p class="text-sm text-white/80 text-center md:text-left max-w-xs">
+                    Modern survey platform for data collection and analysis
+                </p>
+            </div>
+            
+            <!-- Quick Links -->
+            <div class="flex flex-col items-center justify-center">
+                <h3 class="font-bold text-lg mb-4 text-white">Quick Links</h3>
+                <ul class="space-y-2 text-center w-full">
+                    {% if user.is_authenticated and user.is_form_creator %}
+                        <li>
+                            <a href="{% url 'forms:list' %}" class="link link-hover text-white/80 hover:text-white flex items-center justify-center gap-2">
+                                <i class="fas fa-file-alt"></i> Forms
+                            </a>
+                        </li>
+                        <li>
+                            <a href="{% url 'master_data:list' %}" class="link link-hover text-white/80 hover:text-white flex items-center justify-center gap-2">
+                                <i class="fas fa-database"></i> Master Data
+                            </a>
+                        </li>
+                    {% endif %}
+                    <li>
+                        <a href="{% url 'home' %}" class="link link-hover text-white/80 hover:text-white flex items-center justify-center gap-2">
+                            <i class="fas fa-home"></i> Home
+                        </a>
+                    </li>
+                </ul>
+            </div>
+            
+            <!-- Contact Info -->
+            <div class="flex flex-col items-center md:items-end justify-center">
+                <h3 class="font-bold text-lg mb-4 text-white">Contact</h3>
+                <div class="text-sm text-white/80 space-y-2 text-center md:text-right w-full">
+                    <p class="flex items-center justify-center md:justify-end gap-2">
+                        <i class="fas fa-users"></i>
+                        <span>Tim Data & IT</span>
+                    </p>
+                    <p class="flex items-center justify-center md:justify-end gap-2">
+                        <i class="fas fa-church"></i>
+                        <span>Paroki Bintaro</span>
+                    </p>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Bottom Bar -->
+        <div class="divider divider-neutral opacity-20 mt-8"></div>
+        <div class="text-center text-sm text-white/70">
+            <p>
+                © {{ current_year|default:"2025" }} Survey Application. All rights reserved.
+            </p>
+            <p class="mt-2 flex items-center justify-center gap-2">
+                <i class="fas fa-code"></i>
+                <span>Built with Django & Tailwind CSS</span>
+            </p>
+        </div>
     </div>
 </footer>

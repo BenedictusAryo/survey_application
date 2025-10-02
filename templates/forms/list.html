@@ -3,27 +3,118 @@
 {% block title %}Forms - Survey Application{% endblock %}
 
 {% block content %}
-<div class="flex justify-between items-center mb-6">
-    <h1 class="text-3xl font-bold">My Forms</h1>
-    <a href="{% url 'forms:create' %}" class="btn btn-primary">Create New Form</a>
+<!-- Header Section -->
+<div class="mb-8">
+    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
+        <div>
+            <h1 class="text-4xl font-bold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
+                My Forms
+            </h1>
+            <p class="text-base-content/60 mt-2">Manage and organize your survey forms</p>
+        </div>
+        <a href="{% url 'forms:create' %}" class="btn btn-primary gap-2 shadow-lg hover:shadow-xl transition-all">
+            <i class="fas fa-plus"></i>
+            <span>Create New Form</span>
+        </a>
+    </div>
+    
+    <!-- Stats Overview -->
+    <div class="stats stats-vertical sm:stats-horizontal shadow-lg w-full bg-base-100">
+        <div class="stat">
+            <div class="stat-figure text-primary">
+                <i class="fas fa-file-alt text-3xl"></i>
+            </div>
+            <div class="stat-title">Total Forms</div>
+            <div class="stat-value text-primary">{{ forms|length }}</div>
+            <div class="stat-desc">All your survey forms</div>
+        </div>
+        
+        <div class="stat">
+            <div class="stat-figure text-success">
+                <i class="fas fa-check-circle text-3xl"></i>
+            </div>
+            <div class="stat-title">Published</div>
+            <div class="stat-value text-success">{{ forms|length }}</div>
+            <div class="stat-desc">Active forms</div>
+        </div>
+        
+        <div class="stat">
+            <div class="stat-figure text-secondary">
+                <i class="fas fa-chart-line text-3xl"></i>
+            </div>
+            <div class="stat-title">This Month</div>
+            <div class="stat-value text-secondary">{{ forms|length }}</div>
+            <div class="stat-desc">Forms created</div>
+        </div>
+    </div>
 </div>
 
+<!-- Forms Grid -->
 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
     {% for form in forms %}
-        <div class="card bg-base-100 shadow-xl">
+        <div class="card bg-base-100 shadow-xl hover:shadow-2xl transition-all duration-300 border border-base-300 hover:border-primary/50 group">
+            <!-- Card Header with Icon -->
             <div class="card-body">
-                <h2 class="card-title">{{ form.title }}</h2>
-                <p>{{ form.description|truncatewords:20 }}</p>
-                <div class="badge badge-{{ form.status|default:'draft' }}">{{ form.get_status_display }}</div>
-                <div class="card-actions justify-end">
-                    <a href="{% url 'forms:detail' form.pk %}" class="btn btn-primary btn-sm">View</a>
+                <div class="flex items-start justify-between mb-3">
+                    <div class="avatar placeholder">
+                        <div class="bg-gradient-to-br from-primary to-secondary text-primary-content rounded-lg w-12 h-12">
+                            <i class="fas fa-clipboard-list text-xl"></i>
+                        </div>
+                    </div>
+                    <div class="badge badge-{{ form.status|default:'draft' }} gap-2">
+                        <i class="fas fa-circle text-xs"></i>
+                        {{ form.get_status_display }}
+                    </div>
+                </div>
+                
+                <h2 class="card-title text-lg group-hover:text-primary transition-colors">
+                    {{ form.title }}
+                </h2>
+                
+                <p class="text-base-content/60 text-sm line-clamp-3">
+                    {{ form.description|truncatewords:20 }}
+                </p>
+                
+                <!-- Stats -->
+                <div class="flex items-center gap-4 mt-4 text-sm text-base-content/60">
+                    <div class="flex items-center gap-2">
+                        <i class="fas fa-question-circle"></i>
+                        <span>{{ form.questions.count }} Questions</span>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <i class="fas fa-chart-bar"></i>
+                        <span>{{ form.responses.count }} Responses</span>
+                    </div>
+                </div>
+                
+                <!-- Actions -->
+                <div class="card-actions justify-end mt-4 pt-4 border-t border-base-300">
+                    <a href="{% url 'forms:detail' form.pk %}" class="btn btn-primary btn-sm gap-2 shadow-md hover:shadow-lg transition-all">
+                        <i class="fas fa-eye"></i>
+                        <span>View Details</span>
+                    </a>
                 </div>
             </div>
         </div>
     {% empty %}
-        <div class="col-span-full text-center py-12">
-            <p class="text-lg text-gray-600">No forms yet.</p>
-            <a href="{% url 'forms:create' %}" class="btn btn-primary mt-4">Create Your First Form</a>
+        <div class="col-span-full">
+            <div class="card bg-base-100 shadow-xl border-2 border-dashed border-base-300">
+                <div class="card-body text-center py-16">
+                    <div class="flex justify-center mb-6">
+                        <div class="avatar placeholder">
+                            <div class="bg-base-200 text-base-content/40 rounded-full w-24 h-24">
+                                <i class="fas fa-file-alt text-5xl"></i>
+                            </div>
+                        </div>
+                    </div>
+                    <h3 class="text-2xl font-bold text-base-content/70 mb-2">No forms yet</h3>
+                    <p class="text-base-content/60 mb-6">Create your first survey form to get started</p>
+                    <a href="{% url 'forms:create' %}" class="btn btn-primary gap-2 shadow-lg hover:shadow-xl transition-all">
+                        <i class="fas fa-plus"></i>
+                        <span>Create Your First Form</span>
+                    </a>
+                </div>
+            </div>
         </div>
     {% endfor %}
 </div>
