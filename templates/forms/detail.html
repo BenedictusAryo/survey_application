@@ -226,18 +226,115 @@
 
 {% block extra_scripts %}
 <script>
+// Get CSRF token from cookies
+function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
+    }
+    return cookieValue;
+}
+
 function viewDataset(datasetId) {
     window.location.href = `/master-data/${datasetId}/`;
 }
 
 function openAttachModal() {
-    // Load available datasets via HTMX
-    htmx.ajax('GET', '{% url "forms:master_data_available" form.pk %}', {
-        target: '#attach-modal-content'
-    });
+    const modal = document.getElementById('attach-master-data-modal');
+    const content = document.getElementById('attach-modal-content');
     
-    // Open modal
-    document.getElementById('attach-master-data-modal').classList.add('modal-open');
+    // Show loading spinner
+    content.innerHTML = '<div class="loading loading-spinner loading-lg mx-auto"></div>';
+    modal.classList.add('modal-open');
+    
+    // Load available datasets via fetch as fallback if HTMX is not available
+    if (typeof htmx !== 'undefined') {
+        htmx.ajax('GET', '{% url "forms:master_data_available" form.pk %}', {
+            target: '#attach-modal-content'
+        });
+    } else {
+        // Fallback to fetch API
+        fetch('{% url "forms:master_data_available" form.pk %}')
+            .then(response => response.text())
+            .then(html => {
+                content.innerHTML = html;
+                // Attach click handlers for attach buttons
+                attachModalHandlers();
+            })
+            .catch(error => {
+                content.innerHTML = `<div class="alert alert-error"><span>Error loading datasets: ${error.message}</span></div>`;
+            });
+    }
+}
+
+function attachModalHandlers() {
+    // Find all attach buttons and add click handlers
+    const attachButtons = document.querySelectorAll('[data-attach-dataset]');
+    attachButtons.forEach(button => {
+        button.addEventListener('click', function() {
+            const datasetId = this.getAttribute('data-attach-dataset');
+            attachDataset(datasetId);
+        });
+    });
+}
+
+function attachDataset(datasetId) {
+    const formData = new FormData();
+    formData.append('dataset_id', datasetId);
+    
+    // Get CSRF token
+    const csrfToken = getCookie('csrftoken');
+    
+    fetch('{% url "forms:master_data_attach" form.pk %}', {
+        method: 'POST',
+        body: formData,
+        headers: {
+            'X-CSRFToken': csrfToken || ''
+        }
+    })
+    .then(response => response.text())
+    .then(html => {
+        // Update the master data attachments section
+        const attachmentsContainer = document.getElementById('master-data-attachments');
+        if (attachmentsContainer) {
+            attachmentsContainer.outerHTML = html;
+        }
+        
+        // Close modal
+        closeAttachModal();
+        
+        // Show success message
+        showToast('Master data attached successfully!', 'success');
+        
+        // Reload the page to refresh the data
+        setTimeout(() => {
+            window.location.reload();
+        }, 1500);
+    })
+    .catch(error => {
+        showToast('Error attaching dataset: ' + error.message, 'error');
+    });
+}
+
+function showToast(message, type = 'success') {
+    const toast = document.createElement('div');
+    toast.className = 'toast toast-top toast-end';
+    const alertClass = type === 'success' ? 'alert-success' : 'alert-error';
+    toast.innerHTML = `<div class="alert ${alertClass}"><span>${message}</span></div>`;
+    document.body.appendChild(toast);
+    
+    setTimeout(() => {
+        if (document.body.contains(toast)) {
+            document.body.removeChild(toast);
+        }
+    }, 3000);
 }
 
 function closeAttachModal() {
@@ -279,23 +376,23 @@ function deleteForm() {
     }
 }
 
-// HTMX event listeners for better UX
-document.body.addEventListener('htmx:afterRequest', function(evt) {
-    if (evt.detail.xhr.status === 200 && evt.detail.pathInfo.pathname.includes('master-data/attach')) {
-        // Close modal after successful attachment
-        closeAttachModal();
-        
-        // Show success message
-        const toast = document.createElement('div');
-        toast.className = 'toast toast-top toast-end';
-        toast.innerHTML = '<div class="alert alert-success"><span>Master data attached successfully!</span></div>';
-        document.body.appendChild(toast);
-        
-        setTimeout(() => {
-            document.body.removeChild(toast);
-        }, 3000);
-    }
-});
+// HTMX event listeners for better UX (only if HTMX is available)
+if (typeof htmx !== 'undefined') {
+    document.body.addEventListener('htmx:afterRequest', function(evt) {
+        if (evt.detail.xhr.status === 200 && evt.detail.pathInfo.pathname.includes('master-data/attach')) {
+            // Close modal after successful attachment
+            closeAttachModal();
+            
+            // Show success message
+            showToast('Master data attached successfully!', 'success');
+            
+            // Reload the page to refresh the data
+            setTimeout(() => {
+                window.location.reload();
+            }, 1500);
+        }
+    });
+}
 
 // Handle modal close on escape key
 document.addEventListener('keydown', function(e) {
@@ -303,7 +400,6 @@ document.addEventListener('keydown', function(e) {
         closeAttachModal();
     }
 });
-</script>
 </script>
 
 <!-- Master Data Attachment Modal -->

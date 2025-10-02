@@ -248,6 +248,19 @@ class FormResponsesView(LoginRequiredMixin, DetailView):
     model = Form
     template_name = 'forms/responses.html'
     context_object_name = 'form'
+    paginate_by = 20
+    
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        form_obj = self.object
+        
+        # Get all responses for this form
+        responses = form_obj.responses.select_related('user', 'record').prefetch_related('answers').all()
+        
+        context['responses'] = responses
+        context['complete_count'] = responses.filter(is_complete=True).count()
+        
+        return context
 
 class FormQRCodeView(DetailView):
     model = Form

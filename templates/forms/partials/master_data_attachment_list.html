@@ -18,8 +18,9 @@
                                 </div>
                             </div>
                             <button class="btn btn-primary btn-sm"
+                                    data-attach-dataset="{{ dataset.id }}"
                                     hx-post="{% url 'forms:master_data_attach' form.pk %}"
-                                    hx-vals='{"dataset_id": "{{ dataset.id }}"}'
+                                    hx-vals='{"dataset_id": {{ dataset.id }}}'
                                     hx-target="#master-data-attachments"
                                     hx-swap="outerHTML">
                                 Attach

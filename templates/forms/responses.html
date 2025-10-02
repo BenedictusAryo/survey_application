@@ -1,1 +1,228 @@
-{% extends 'base.html' %}{% block content %}<h1>Coming soon: responses</h1>{% endblock %}
+{% extends 'base.html' %}
+
+{% block title %}Responses - {{ form.title }}{% endblock %}
+
+{% block content %}
+<div class="mb-6">
+    <div class="flex justify-between items-center">
+        <div>
+            <h1 class="text-3xl font-bold">Responses</h1>
+            <p class="text-gray-600">{{ form.title }}</p>
+        </div>
+        <div class="flex gap-2">
+            <a href="{% url 'forms:detail' form.pk %}" class="btn btn-outline btn-sm">Back to Form</a>
+            {% if responses %}
+            <button class="btn btn-primary btn-sm" onclick="exportResponses()">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                </svg>
+                Export CSV
+            </button>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<!-- Statistics Cards -->
+<div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+    <div class="card bg-base-100 shadow-xl">
+        <div class="card-body">
+            <h3 class="text-sm text-gray-500 uppercase">Total Responses</h3>
+            <p class="text-3xl font-bold">{{ responses.count }}</p>
+        </div>
+    </div>
+    
+    <div class="card bg-base-100 shadow-xl">
+        <div class="card-body">
+            <h3 class="text-sm text-gray-500 uppercase">Complete</h3>
+            <p class="text-3xl font-bold text-success">{{ complete_count }}</p>
+        </div>
+    </div>
+    
+    <div class="card bg-base-100 shadow-xl">
+        <div class="card-body">
+            <h3 class="text-sm text-gray-500 uppercase">Questions</h3>
+            <p class="text-3xl font-bold">{{ form.questions.count }}</p>
+        </div>
+    </div>
+    
+    <div class="card bg-base-100 shadow-xl">
+        <div class="card-body">
+            <h3 class="text-sm text-gray-500 uppercase">Latest Response</h3>
+            {% if responses.first %}
+            <p class="text-sm font-semibold">{{ responses.first.submitted_at|date:"M d, Y" }}</p>
+            <p class="text-xs text-gray-500">{{ responses.first.submitted_at|time:"h:i A" }}</p>
+            {% else %}
+            <p class="text-sm text-gray-500">No responses yet</p>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<!-- Responses Table -->
+<div class="card bg-base-100 shadow-xl">
+    <div class="card-body">
+        <h2 class="card-title mb-4">Response Details</h2>
+        
+        {% if responses %}
+            <div class="overflow-x-auto">
+                <table class="table table-zebra w-full">
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>Submitted</th>
+                            <th>Status</th>
+                            <th>Respondent</th>
+                            <th>Answers</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for response in responses %}
+                        <tr>
+                            <td>{{ forloop.counter }}</td>
+                            <td>
+                                <div class="text-sm">{{ response.submitted_at|date:"M d, Y" }}</div>
+                                <div class="text-xs text-gray-500">{{ response.submitted_at|time:"h:i A" }}</div>
+                            </td>
+                            <td>
+                                {% if response.is_complete %}
+                                    <span class="badge badge-success badge-sm">Complete</span>
+                                {% else %}
+                                    <span class="badge badge-warning badge-sm">Incomplete</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if response.user %}
+                                    <div class="flex items-center gap-2">
+                                        <div class="avatar placeholder">
+                                            <div class="bg-neutral-focus text-neutral-content rounded-full w-8">
+                                                <span class="text-xs">{{ response.user.username|slice:":2"|upper }}</span>
+                                            </div>
+                                        </div>
+                                        <span class="text-sm">{{ response.user.username }}</span>
+                                    </div>
+                                {% elif response.record %}
+                                    <span class="text-sm">{{ response.record }}</span>
+                                {% else %}
+                                    <span class="text-sm text-gray-500">Anonymous</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <span class="badge badge-outline">{{ response.answers.count }} / {{ form.questions.count }}</span>
+                            </td>
+                            <td>
+                                <button class="btn btn-xs btn-outline" onclick="viewResponse({{ response.id }})">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                                    </svg>
+                                    View
+                                </button>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            
+            <!-- Pagination -->
+            {% if is_paginated %}
+            <div class="flex justify-center mt-4">
+                <div class="btn-group">
+                    {% if page_obj.has_previous %}
+                        <a href="?page=1" class="btn btn-sm">«</a>
+                        <a href="?page={{ page_obj.previous_page_number }}" class="btn btn-sm">‹</a>
+                    {% endif %}
+                    
+                    <button class="btn btn-sm btn-active">Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</button>
+                    
+                    {% if page_obj.has_next %}
+                        <a href="?page={{ page_obj.next_page_number }}" class="btn btn-sm">›</a>
+                        <a href="?page={{ page_obj.paginator.num_pages }}" class="btn btn-sm">»</a>
+                    {% endif %}
+                </div>
+            </div>
+            {% endif %}
+        {% else %}
+            <div class="text-center py-12">
+                <div class="text-6xl mb-4">📋</div>
+                <h3 class="text-2xl font-semibold mb-2">No Responses Yet</h3>
+                <p class="text-gray-600 mb-6">
+                    When people submit your form, their responses will appear here.
+                </p>
+                {% if form.status == 'published' %}
+                    <button class="btn btn-primary" onclick="copyPublicLink()">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                        </svg>
+                        Copy Form Link
+                    </button>
+                {% else %}
+                    <a href="{% url 'forms:publish' form.pk %}" class="btn btn-primary">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                        </svg>
+                        Publish Form
+                    </a>
+                {% endif %}
+            </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Response Detail Modal -->
+<div class="modal" id="response-detail-modal">
+    <div class="modal-box w-11/12 max-w-3xl" id="response-detail-content">
+        <!-- Content will be loaded dynamically -->
+    </div>
+    <div class="modal-backdrop" onclick="closeResponseModal()"></div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+function viewResponse(responseId) {
+    // For now, show a simple modal with response details
+    const modal = document.getElementById('response-detail-modal');
+    const content = document.getElementById('response-detail-content');
+    
+    // Load response details via fetch or HTMX in the future
+    content.innerHTML = `
+        <h3 class="font-bold text-lg mb-4">Response Details</h3>
+        <p class="mb-4">Response ID: ${responseId}</p>
+        <div class="alert alert-info">
+            <span>Detailed response view will be implemented with HTMX.</span>
+        </div>
+        <div class="modal-action">
+            <button class="btn" onclick="closeResponseModal()">Close</button>
+        </div>
+    `;
+    
+    modal.classList.add('modal-open');
+}
+
+function closeResponseModal() {
+    document.getElementById('response-detail-modal').classList.remove('modal-open');
+}
+
+function exportResponses() {
+    alert('CSV export functionality will be implemented.');
+}
+
+function copyPublicLink() {
+    const link = `${window.location.origin}/survey/{{ form.slug }}/`;
+    navigator.clipboard.writeText(link).then(() => {
+        alert('Link copied to clipboard!');
+    });
+}
+
+// Handle modal close on escape key
+document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') {
+        closeResponseModal();
+    }
+});
+</script>
+{% endblock %}
