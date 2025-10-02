@@ -6,3 +6,4 @@ Pillow==11.3.0
 python-decouple==3.8
 django-simple-captcha==0.6.2
 django-ratelimit==4.1.0
+mysqlclient==2.2.0  # For MySQL database on cPanel
