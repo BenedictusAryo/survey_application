@@ -2,46 +2,160 @@
 
 {% block title %}Thank You - {{ survey_form.title }}{% endblock %}
 
+{% block extra_head %}
+<style>
+    body {
+        background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%);
+        min-height: 100vh;
+    }
+    
+    .success-animation {
+        animation: successPulse 2s ease-in-out infinite;
+    }
+    
+    @keyframes successPulse {
+        0%, 100% {
+            transform: scale(1);
+        }
+        50% {
+            transform: scale(1.1);
+        }
+    }
+    
+    .confetti {
+        animation: confettiFall 3s ease-in-out infinite;
+    }
+    
+    @keyframes confettiFall {
+        0% {
+            transform: translateY(-10px) rotate(0deg);
+            opacity: 0;
+        }
+        50% {
+            opacity: 1;
+        }
+        100% {
+            transform: translateY(10px) rotate(360deg);
+            opacity: 0;
+        }
+    }
+</style>
+{% endblock %}
+
 {% block content %}
-<div class="min-h-[60vh] flex items-center justify-center">
-    <div class="card w-full max-w-2xl shadow-xl bg-base-100">
-        <div class="card-body text-center">
-            <div class="text-6xl mb-4">🎉</div>
-            <h1 class="text-3xl font-bold text-success mb-4">Thank You!</h1>
-            <h2 class="text-xl font-semibold mb-2">{{ survey_form.title }}</h2>
-            <p class="text-gray-600 mb-6">
-                Your response has been successfully submitted. We appreciate you taking the time to complete this survey.
-            </p>
-            
-            <div class="stats shadow mb-6">
-                <div class="stat">
-                    <div class="stat-figure text-primary">
-                        <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
-                                  d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                        </svg>
+<div class="min-h-[80vh] flex items-center justify-center py-12 px-4">
+    <div class="w-full max-w-3xl">
+        <!-- Success Card -->
+        <div class="card bg-base-100 shadow-2xl border-4 border-success/30">
+            <div class="card-body text-center p-8 lg:p-12">
+                <!-- Success Icon -->
+                <div class="mb-6 success-animation">
+                    <div class="inline-block p-6 bg-success/10 rounded-full">
+                        <i class="fas fa-check-circle text-8xl text-success"></i>
                     </div>
-                    <div class="stat-title">Status</div>
-                    <div class="stat-value text-primary">Submitted</div>
-                    <div class="stat-desc">{{ "now"|date:"M d, Y H:i" }}</div>
                 </div>
-            </div>
-            
-            <p class="text-sm text-gray-500 mb-4">
-                Your response has been recorded anonymously and securely.
-            </p>
-            
-            <div class="card-actions justify-center">
-                <a href="/" class="btn btn-primary">Return to Home</a>
+                
+                <!-- Confetti Icons -->
+                <div class="flex justify-center gap-8 mb-6">
+                    <span class="text-5xl confetti" style="animation-delay: 0s">🎉</span>
+                    <span class="text-5xl confetti" style="animation-delay: 0.3s">✨</span>
+                    <span class="text-5xl confetti" style="animation-delay: 0.6s">🎊</span>
+                </div>
+                
+                <!-- Title -->
+                <h1 class="text-4xl lg:text-5xl font-bold bg-gradient-to-r from-success to-primary bg-clip-text text-transparent mb-4">
+                    Thank You!
+                </h1>
+                <h2 class="text-2xl font-semibold text-base-content mb-6">{{ survey_form.title }}</h2>
+                
+                <!-- Description -->
+                <p class="text-lg text-base-content/70 mb-8 max-w-2xl mx-auto">
+                    Your response has been successfully submitted. We appreciate you taking the time to complete this survey.
+                </p>
+                
+                <!-- Stats Card -->
+                <div class="stats stats-vertical lg:stats-horizontal shadow-lg bg-gradient-to-br from-success/5 to-primary/5 border-2 border-success/20 mb-8">
+                    <div class="stat">
+                        <div class="stat-figure text-success">
+                            <i class="fas fa-check-double text-4xl"></i>
+                        </div>
+                        <div class="stat-title font-semibold">Status</div>
+                        <div class="stat-value text-success text-3xl">Submitted</div>
+                        <div class="stat-desc font-medium">{{ "now"|date:"M d, Y H:i" }}</div>
+                    </div>
+                    
+                    <div class="stat">
+                        <div class="stat-figure text-primary">
+                            <i class="fas fa-shield-alt text-4xl"></i>
+                        </div>
+                        <div class="stat-title font-semibold">Security</div>
+                        <div class="stat-value text-primary text-3xl">Secure</div>
+                        <div class="stat-desc font-medium">Encrypted & Anonymous</div>
+                    </div>
+                </div>
+                
+                <!-- Security Badge -->
+                <div class="flex items-center justify-center gap-3 mb-8 flex-wrap">
+                    <div class="badge badge-success badge-lg gap-2 px-4 py-4">
+                        <i class="fas fa-lock"></i>
+                        Recorded Securely
+                    </div>
+                </div>
+                
+                <!-- Action Buttons -->
+                <div class="divider text-lg font-semibold mb-8">What's Next?</div>
+                
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 max-w-2xl mx-auto mb-8">
+                    <!-- Share on WhatsApp Button -->
+                    <button onclick="shareToWhatsApp()" class="btn btn-success btn-lg gap-3 shadow-lg hover:shadow-xl transition-all">
+                        <i class="fab fa-whatsapp text-2xl"></i>
+                        <span>Share Survey</span>
+                    </button>
+                    
+                    <!-- Fill Again Button -->
+                    <a href="{% url 'responses:public_survey' survey_form.slug %}" class="btn btn-primary btn-lg gap-3 shadow-lg hover:shadow-xl transition-all">
+                        <i class="fas fa-redo text-xl"></i>
+                        <span>Fill Again</span>
+                    </a>
+                </div>
+                
+                <!-- QR Code Section -->
                 {% if survey_form.qr_code %}
-                    <div class="divider">Share this survey</div>
-                    <div class="text-center">
-                        <img src="{{ survey_form.qr_code.url }}" alt="QR Code" class="w-32 h-32 mx-auto mb-2">
-                        <p class="text-xs text-gray-500">Scan to access this survey</p>
+                    <div class="divider mb-6">Share with Others</div>
+                    <div class="card bg-base-200/50 shadow-lg border-2 border-base-300 max-w-md mx-auto">
+                        <div class="card-body items-center p-6">
+                            <h3 class="font-bold text-lg mb-4 flex items-center gap-2">
+                                <i class="fas fa-qrcode text-primary"></i>
+                                QR Code
+                            </h3>
+                            <div class="bg-white p-4 rounded-xl shadow-md">
+                                <img src="{{ survey_form.qr_code.url }}" alt="QR Code" class="w-48 h-48 mx-auto">
+                            </div>
+                            <p class="text-sm text-base-content/70 mt-4">
+                                <i class="fas fa-mobile-alt mr-2"></i>
+                                Scan to access this survey
+                            </p>
+                        </div>
                     </div>
                 {% endif %}
             </div>
         </div>
+        
+        <!-- Thank You Message -->
+        <div class="text-center mt-8">
+            <p class="text-base-content/60 flex items-center justify-center gap-2">
+                <i class="fas fa-heart text-error"></i>
+                Thank you for your valuable contribution!
+            </p>
+        </div>
     </div>
 </div>
+
+<script>
+function shareToWhatsApp() {
+    const link = `${window.location.origin}/survey/{{ survey_form.slug }}/`;
+    const text = encodeURIComponent(`I just completed this survey: {{ survey_form.title }}\n\nHelp by filling it out too!\n${link}`);
+    window.open(`https://wa.me/?text=${text}`, '_blank');
+}
+</script>
 {% endblock %}
