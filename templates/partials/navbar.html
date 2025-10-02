@@ -8,41 +8,50 @@
             </div>
             <ul tabindex="0" class="menu menu-sm dropdown-content mt-3 z-[1] p-2 shadow bg-base-100 rounded-box w-52 text-base-content">
                 {% if user.is_authenticated and user.is_form_creator %}
-                    <li><a href="{% url 'master_data:list' %}">Master Data</a></li>
-                    <li><a href="{% url 'forms:list' %}">Forms</a></li>
+                    <li><a href="{% url 'master_data:list' %}"><i class="fas fa-database"></i> Master Data</a></li>
+                    <li><a href="{% url 'forms:list' %}"><i class="fas fa-file-alt"></i> Forms</a></li>
                 {% endif %}
             </ul>
         </div>
-        <a class="btn btn-ghost normal-case text-xl" href="{% url 'home' %}">Survey App</a>
+        <a class="btn btn-ghost normal-case text-xl font-bold" href="{% url 'home' %}">
+            {% load static %}
+            <img src="{% static 'images/logo.png' %}" alt="Logo" class="h-8 w-auto">
+            <span class="ml-2">Survey Application</span>
+        </a>
     </div>
     
     <div class="navbar-center hidden lg:flex">
         <ul class="menu menu-horizontal px-1">
             {% if user.is_authenticated and user.is_form_creator %}
-                <li><a href="{% url 'master_data:list' %}">Master Data</a></li>
-                <li><a href="{% url 'forms:list' %}">Forms</a></li>
+                <li><a href="{% url 'master_data:list' %}"><i class="fas fa-database"></i> Master Data</a></li>
+                <li><a href="{% url 'forms:list' %}"><i class="fas fa-file-alt"></i> Forms</a></li>
             {% endif %}
         </ul>
     </div>
     
-    <div class="navbar-end">
+    <div class="navbar-end gap-2">
         {% if user.is_authenticated %}
             <div class="dropdown dropdown-end">
-                <div tabindex="0" role="button" class="btn btn-ghost">
+                <div tabindex="0" role="button" class="btn btn-ghost gap-2">
                     <div class="avatar placeholder">
                         <div class="bg-neutral-focus text-neutral-content rounded-full w-8">
                             <span class="text-xs">{{ user.username|first|upper }}</span>
                         </div>
                     </div>
+                    <span class="hidden md:inline">{{ user.username }}</span>
                 </div>
                 <ul tabindex="0" class="menu menu-sm dropdown-content mt-3 z-[1] p-2 shadow bg-base-100 rounded-box w-52 text-base-content">
-                    <li><a href="{% url 'accounts:profile' %}">Profile</a></li>
-                    <li><a href="{% url 'accounts:logout' %}">Logout</a></li>
+                    <li><a href="{% url 'accounts:profile' %}"><i class="fas fa-user"></i> Profile</a></li>
+                    <li><a href="{% url 'accounts:logout' %}"><i class="fas fa-sign-out-alt"></i> Logout</a></li>
                 </ul>
             </div>
         {% else %}
-            <a class="btn btn-ghost" href="{% url 'accounts:login' %}">Login</a>
-            <a class="btn btn-secondary" href="{% url 'accounts:register' %}">Register</a>
+            <a class="btn btn-ghost" href="{% url 'accounts:login' %}">
+                <i class="fas fa-sign-in-alt"></i> Login
+            </a>
+            <a class="btn btn-secondary" href="{% url 'accounts:register' %}">
+                <i class="fas fa-user-plus"></i> Register
+            </a>
         {% endif %}
     </div>
 </div>

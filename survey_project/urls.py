@@ -28,4 +28,9 @@ urlpatterns = [
     path('forms/', include('forms.urls')),
     path('survey/', include('responses.urls')),  # Public survey URLs
     path('captcha/', include('captcha.urls')),  # Captcha URLs
-] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+]
+
+# Serve static and media files in development
+if settings.DEBUG:
+    urlpatterns += static(settings.STATIC_URL, document_root=settings.BASE_DIR / 'static')
+    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

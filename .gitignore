@@ -207,3 +207,18 @@ marimo/_lsp/
 __marimo__/
 media/
 staticfiles/
+
+# Node.js / npm
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+package-lock.json
+yarn.lock
+
+# Tailwind CSS compiled output
+static/css/output.css
+
+# OS specific files
+.DS_Store
+Thumbs.db

@@ -1,0 +1,740 @@
+/* Parish Theme - Additional Custom Styles for Survey Application */
+/* This file complements DaisyUI with additional utilities and overrides */
+
+/* CSS Variables for Parish Colors (for custom use) */
+:root {
+    --parish-primary: #2B0A0A;
+    --parish-secondary: #791501;
+    --parish-accent: #C52000;
+    --parish-error: #DF2601;
+    --parish-text: #5D5454;
+    --parish-light: #F8F1EF;
+    --parish-success: #355E3B;
+    --parish-info: #1E3A5F;
+    --parish-warning: #ffc107;
+}
+
+/* Smooth transitions */
+* {
+    transition-property: background-color, border-color, color, fill, stroke;
+    transition-duration: 200ms;
+    transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Custom gradient backgrounds */
+.gradient-primary {
+    background: linear-gradient(135deg, var(--parish-primary) 0%, var(--parish-secondary) 100%);
+}
+
+.gradient-accent {
+    background: linear-gradient(135deg, var(--parish-accent) 0%, var(--parish-error) 100%);
+}
+
+/* Enhanced card hover effects */
+.card-hover {
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.card-hover:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 12px 24px rgba(43, 10, 10, 0.15);
+}
+
+/* Custom stat cards */
+.stat-card {
+    background: white;
+    border-radius: 0.5rem;
+    padding: 1.5rem;
+    text-align: center;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.stat-number {
+    font-size: 2.5rem;
+    font-weight: bold;
+    line-height: 1;
+    margin-bottom: 0.5rem;
+}
+
+/* QR Code container */
+.qr-code-container {
+    max-width: 300px;
+    margin: 0 auto;
+}
+
+.qr-code-container img {
+    width: 100%;
+    height: auto;
+    border-radius: 0.5rem;
+}
+
+/* Status badges with custom colors */
+.badge-attended {
+    background-color: var(--parish-success);
+    color: white;
+}
+
+.badge-pending {
+    background-color: var(--parish-warning);
+    color: black;
+}
+
+.badge-cancelled {
+    background-color: var(--parish-error);
+    color: white;
+}
+
+/* Form enhancements */
+.form-section {
+    background: white;
+    border-radius: 0.5rem;
+    padding: 1.5rem;
+    margin-bottom: 1.5rem;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+/* Print styles */
+@media print {
+    .no-print {
+        display: none !important;
+    }
+    
+    .print-full-width {
+        width: 100% !important;
+        max-width: 100% !important;
+    }
+}
+
+/* Responsive utilities */
+@media (max-width: 768px) {
+    .stat-number {
+        font-size: 2rem;
+    }
+    
+    .hide-mobile {
+        display: none;
+    }
+}
+
+/* Loading spinner */
+.spinner {
+    border: 3px solid rgba(43, 10, 10, 0.1);
+    border-top: 3px solid var(--parish-primary);
+    border-radius: 50%;
+    width: 40px;
+    height: 40px;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+
+::-webkit-scrollbar-track {
+    background: var(--parish-light);
+}
+
+::-webkit-scrollbar-thumb {
+    background: var(--parish-primary);
+    border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: var(--parish-secondary);
+}
+
+/* Focus styles for accessibility */
+:focus-visible {
+    outline: 2px solid var(--parish-primary);
+    outline-offset: 2px;
+}
+
+/* Image placeholder */
+.img-placeholder {
+    background: linear-gradient(135deg, var(--parish-light) 0%, #e5d5d1 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--parish-text);
+    font-size: 3rem;
+}
+
+/* Base styling overrides */
+body {
+    color: var(--text-color);
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+/* Navigation */
+.navbar-brand {
+    font-weight: bold;
+    color: var(--white) !important;
+}
+
+.navbar-dark .navbar-brand:hover {
+    color: var(--light-color) !important;
+}
+
+.navbar-dark .navbar-nav .nav-link {
+    color: rgba(255, 255, 255, 0.9) !important;
+}
+
+.navbar-dark .navbar-nav .nav-link:hover {
+    color: var(--light-color) !important;
+}
+
+/* Bootstrap color overrides */
+.bg-primary {
+    background-color: var(--primary-color) !important;
+}
+
+.text-primary {
+    color: var(--primary-color) !important;
+}
+
+.border-primary {
+    border-color: var(--primary-color) !important;
+}
+
+.bg-secondary {
+    background-color: var(--secondary-color) !important;
+}
+
+.text-secondary {
+    color: var(--secondary-color) !important;
+}
+
+.border-secondary {
+    border-color: var(--secondary-color) !important;
+}
+
+.bg-danger {
+    background-color: var(--danger-color) !important;
+}
+
+.text-danger {
+    color: var(--danger-color) !important;
+}
+
+.border-danger {
+    border-color: var(--danger-color) !important;
+}
+
+.bg-success {
+    background-color: var(--success-color) !important;
+}
+
+.text-success {
+    color: var(--success-color) !important;
+}
+
+.border-success {
+    border-color: var(--success-color) !important;
+}
+
+.bg-info {
+    background-color: var(--info-color) !important;
+}
+
+.text-info {
+    color: var(--info-color) !important;
+}
+
+.border-info {
+    border-color: var(--info-color) !important;
+}
+
+.bg-light {
+    background-color: var(--light-color) !important;
+}
+
+.text-light {
+    color: var(--light-color) !important;
+}
+
+.bg-dark {
+    background-color: var(--dark-color) !important;
+}
+
+.text-dark {
+    color: var(--dark-color) !important;
+}
+
+/* Button overrides */
+.btn-primary {
+    background-color: var(--primary-color);
+    border-color: var(--primary-color);
+    color: var(--white);
+}
+
+.btn-primary:hover,
+.btn-primary:focus,
+.btn-primary:active {
+    background-color: var(--primary-dark);
+    border-color: var(--primary-dark);
+    color: var(--white);
+}
+
+.btn-outline-primary {
+    color: var(--primary-color);
+    border-color: var(--primary-color);
+}
+
+.btn-outline-primary:hover,
+.btn-outline-primary:focus,
+.btn-outline-primary:active {
+    background-color: var(--primary-color);
+    border-color: var(--primary-color);
+    color: var(--white);
+}
+
+.btn-secondary {
+    background-color: var(--secondary-color);
+    border-color: var(--secondary-color);
+    color: var(--white);
+}
+
+.btn-secondary:hover,
+.btn-secondary:focus,
+.btn-secondary:active {
+    background-color: var(--accent-color);
+    border-color: var(--accent-color);
+    color: var(--white);
+}
+
+.btn-outline-secondary {
+    color: var(--secondary-color);
+    border-color: var(--secondary-color);
+}
+
+.btn-outline-secondary:hover,
+.btn-outline-secondary:focus,
+.btn-outline-secondary:active {
+    background-color: var(--secondary-color);
+    border-color: var(--secondary-color);
+    color: var(--white);
+}
+
+.btn-danger {
+    background-color: var(--danger-color);
+    border-color: var(--danger-color);
+}
+
+.btn-danger:hover,
+.btn-danger:focus,
+.btn-danger:active {
+    background-color: var(--highlight-color);
+    border-color: var(--highlight-color);
+}
+
+.btn-outline-danger {
+    color: var(--danger-color);
+    border-color: var(--danger-color);
+}
+
+.btn-outline-danger:hover,
+.btn-outline-danger:focus,
+.btn-outline-danger:active {
+    background-color: var(--danger-color);
+    border-color: var(--danger-color);
+    color: var(--white);
+}
+
+/* Success buttons */
+.btn-success {
+    background-color: var(--success-color);
+    border-color: var(--success-color);
+    color: var(--white);
+}
+
+.btn-success:hover,
+.btn-success:focus,
+.btn-success:active {
+    background-color: #2A4F30;
+    border-color: #2A4F30;
+    color: var(--white);
+}
+
+.btn-outline-success {
+    color: var(--success-color);
+    border-color: var(--success-color);
+}
+
+.btn-outline-success:hover,
+.btn-outline-success:focus,
+.btn-outline-success:active {
+    background-color: var(--success-color);
+    border-color: var(--success-color);
+    color: var(--white);
+}
+
+/* Info buttons */
+.btn-info {
+    background-color: var(--info-color);
+    border-color: var(--info-color);
+    color: var(--white);
+}
+
+.btn-info:hover,
+.btn-info:focus,
+.btn-info:active {
+    background-color: #1A3354;
+    border-color: #1A3354;
+    color: var(--white);
+}
+
+.btn-outline-info {
+    color: var(--info-color);
+    border-color: var(--info-color);
+}
+
+.btn-outline-info:hover,
+.btn-outline-info:focus,
+.btn-outline-info:active {
+    background-color: var(--info-color);
+    border-color: var(--info-color);
+    color: var(--white);
+}
+
+/* Cards */
+.card {
+    border: none;
+    box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+    border-radius: 8px;
+}
+
+.card-header {
+    background-color: var(--light-color);
+    border-bottom: 1px solid rgba(91, 84, 84, 0.125);
+    color: var(--text-color);
+}
+
+/* Alerts */
+.alert-primary {
+    background-color: rgba(43, 10, 10, 0.1);
+    border-color: var(--primary-color);
+    color: var(--primary-color);
+}
+
+.alert-secondary {
+    background-color: rgba(121, 21, 1, 0.1);
+    border-color: var(--secondary-color);
+    color: var(--secondary-color);
+}
+
+.alert-danger {
+    background-color: rgba(197, 32, 0, 0.1);
+    border-color: var(--danger-color);
+    color: var(--danger-color);
+}
+
+.alert-success {
+    background-color: rgba(53, 94, 59, 0.1);
+    border-color: var(--success-color);
+    color: var(--success-color);
+}
+
+.alert-info {
+    background-color: rgba(30, 58, 95, 0.1);
+    border-color: var(--info-color);
+    color: var(--info-color);
+}
+
+/* Badges */
+.badge.bg-primary {
+    background-color: var(--primary-color) !important;
+}
+
+.badge.bg-secondary {
+    background-color: var(--secondary-color) !important;
+}
+
+.badge.bg-danger {
+    background-color: var(--danger-color) !important;
+}
+
+.badge.bg-success {
+    background-color: var(--success-color) !important;
+}
+
+.badge.bg-info {
+    background-color: var(--info-color) !important;
+}
+
+.badge.bg-light {
+    background-color: var(--light-color) !important;
+    color: var(--text-color) !important;
+}
+
+/* Forms */
+.form-control:focus {
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 0.2rem rgba(43, 10, 10, 0.25);
+}
+
+.form-check-input:checked {
+    background-color: var(--primary-color);
+    border-color: var(--primary-color);
+}
+
+.form-select:focus {
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 0.2rem rgba(43, 10, 10, 0.25);
+}
+
+/* Tables */
+.table thead th {
+    background-color: var(--primary-color);
+    color: var(--white);
+    border: none;
+}
+
+.table-hover tbody tr:hover {
+    background-color: rgba(248, 241, 239, 0.5);
+}
+
+/* Links */
+a {
+    color: var(--primary-color);
+}
+
+a:hover {
+    color: var(--secondary-color);
+}
+
+/* Dropdown */
+.dropdown-menu {
+    border: 1px solid rgba(91, 84, 84, 0.15);
+}
+
+.dropdown-item:hover,
+.dropdown-item:focus {
+    background-color: var(--light-color);
+    color: var(--text-color);
+}
+
+/* Sidebar */
+.sidebar {
+    min-height: 100vh;
+    background-color: var(--light-color);
+}
+
+/* Main content */
+.main-content {
+    min-height: 100vh;
+}
+
+/* Status badges */
+.status-badge {
+    font-size: 0.875rem;
+    padding: 0.5em 0.75em;
+}
+
+/* QR Code container */
+.qr-code-container {
+    max-width: 300px;
+    margin: 0 auto;
+}
+
+.qr-code-container img {
+    width: 100%;
+    height: auto;
+}
+
+/* Profile and event headers with gradient */
+.profile-header,
+.event-header,
+.registration-header {
+    background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+    color: var(--white);
+    padding: 60px 0;
+    margin-bottom: 30px;
+}
+
+.qr-header {
+    background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+    color: var(--white);
+    padding: 40px 0;
+}
+
+/* Stat cards */
+.stat-card {
+    background: var(--white);
+    border-radius: 8px;
+    padding: 20px;
+    text-align: center;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    margin-bottom: 20px;
+}
+
+.stat-number {
+    font-size: 2.5rem;
+    font-weight: bold;
+    margin-bottom: 5px;
+}
+
+/* Enhanced hover effects */
+.participant-card,
+.profile-card {
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    border: none;
+    margin-bottom: 20px;
+}
+
+.participant-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(43, 10, 10, 0.15);
+}
+
+/* Section backgrounds */
+.export-section,
+.download-section {
+    background: var(--light-color);
+    border-radius: 8px;
+    padding: 20px;
+    margin-bottom: 20px;
+}
+
+.search-section {
+    background: var(--white);
+    border-radius: 8px;
+    padding: 20px;
+    margin-bottom: 20px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+/* Timeline styles */
+.timeline::before {
+    background: rgba(91, 84, 84, 0.3);
+}
+
+.timeline-marker {
+    box-shadow: 0 0 0 3px rgba(91, 84, 84, 0.3);
+}
+
+/* Form styling */
+.form-label {
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+    color: var(--text-color);
+}
+
+.required-field::after {
+    content: " *";
+    color: var(--danger-color);
+}
+
+/* Improve visibility and contrast */
+.text-muted {
+    color: rgba(93, 84, 84, 0.7) !important;
+}
+
+/* Action buttons */
+.action-buttons .btn {
+    margin-right: 10px;
+    margin-bottom: 10px;
+}
+
+.action-buttons .btn-lg {
+    padding: 12px 24px;
+    font-size: 1.1rem;
+}
+
+/* Custom enhancements for better visibility */
+.navbar-dark {
+    background-color: var(--primary-color) !important;
+}
+
+/* Ensure good contrast for readability */
+.card-body {
+    color: var(--text-color);
+}
+
+.small,
+small {
+    color: rgba(93, 84, 84, 0.8);
+}
+
+/* Pagination */
+.page-link {
+    color: var(--primary-color);
+}
+
+.page-link:hover {
+    color: var(--secondary-color);
+    background-color: var(--light-color);
+    border-color: var(--primary-color);
+}
+
+.page-item.active .page-link {
+    background-color: var(--primary-color);
+    border-color: var(--primary-color);
+}
+
+/* Progress bars */
+.progress-bar {
+    background-color: var(--primary-color);
+}
+
+/* Border utilities */
+.border-primary {
+    border-color: var(--primary-color) !important;
+}
+
+.border-secondary {
+    border-color: var(--secondary-color) !important;
+}
+
+.border-success {
+    border-color: var(--success-color) !important;
+}
+
+.border-info {
+    border-color: var(--info-color) !important;
+}
+
+.border-danger {
+    border-color: var(--danger-color) !important;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .profile-header,
+    .event-header,
+    .registration-header {
+        padding: 40px 0;
+    }
+    
+    .stat-number {
+        font-size: 2rem;
+    }
+}
+
+/* Print styles */
+@media print {
+    .navbar, 
+    .btn, 
+    .alert,
+    .no-print { 
+        display: none !important; 
+    }
+    
+    .card { 
+        border: none !important; 
+        box-shadow: none !important; 
+    }
+    
+    .qr-header {
+        background: var(--primary-color) !important;
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+    }
+}
