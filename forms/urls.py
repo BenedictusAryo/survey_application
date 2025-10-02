@@ -14,6 +14,7 @@ urlpatterns = [
     path('questions/<int:pk>/delete/', views.FormQuestionDeleteView.as_view(), name='question_delete'),
     path('<int:pk>/publish/', views.FormPublishView.as_view(), name='publish'),
     path('<int:pk>/responses/', views.FormResponsesView.as_view(), name='responses'),
+    path('<int:pk>/responses/export/', views.export_responses_excel, name='responses_export'),
     path('<slug:slug>/qr/', views.FormQRCodeView.as_view(), name='qr_code'),
     
     # HTMX endpoints for master data attachment

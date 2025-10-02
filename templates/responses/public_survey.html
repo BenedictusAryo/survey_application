@@ -230,11 +230,9 @@
                                     id="dataset_{{ attachment.dataset.id }}"
                                     data-attachment-id="{{ attachment.id }}">
                                 <option value="">-- Select from {{ attachment.dataset.name }} --</option>
-                                {% if not attachment.filter_columns %}
-                                    {% for record in attachment.dataset.records.all %}
-                                        <option value="{{ record.id }}">{% get_record_display attachment record %}</option>
-                                    {% endfor %}
-                                {% endif %}
+                                {% for record in attachment.dataset.records.all %}
+                                    <option value="{{ record.id }}">{% get_record_display attachment record %}</option>
+                                {% endfor %}
                                 <option value="other">🆕 Other (not in list)</option>
                             </select>
                         </div>
@@ -246,6 +244,31 @@
         <!-- Survey Questions -->
         <form method="post" enctype="multipart/form-data" id="survey-form">
             {% csrf_token %}
+            
+            <!-- Hidden inputs for master data selections -->
+            {% for attachment in master_data_attachments %}
+                <input type="hidden" name="dataset_{{ attachment.dataset.id }}" id="hidden_dataset_{{ attachment.dataset.id }}" value="">
+            {% endfor %}
+            
+            <!-- New identity form (shown when "other" is selected) -->
+            {% for attachment in master_data_attachments %}
+                <div class="new-identity-form" id="new-identity-form-{{ attachment.id }}" style="display: none;">
+                    <h3 class="text-lg font-bold mb-4">📝 Enter New {{ attachment.dataset.name }} Information</h3>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        {% for column in attachment.dataset.columns.all %}
+                            <div class="form-control">
+                                <label class="label">
+                                    <span class="label-text">{{ column.name }}</span>
+                                </label>
+                                <input type="text" name="new_{{ attachment.dataset.id }}_{{ column.name }}" 
+                                       id="new_{{ attachment.dataset.id }}_{{ column.name }}"
+                                       class="input input-bordered w-full"
+                                       placeholder="Enter {{ column.name }}">
+                            </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            {% endfor %}
             
             {% for question in questions %}
                 <div class="question-card" data-question-id="{{ question.id }}">
@@ -376,14 +399,14 @@
 const attachmentData = {
     {% for attachment in master_data_attachments %}
     {{ attachment.id }}: {
-        filterColumns: {{ attachment.filter_columns|json_script|safe }},
+        filterColumns: {{ attachment.filter_columns|json_script }},
         datasetId: {{ attachment.dataset.id }},
         records: [
             {% for record in attachment.dataset.records.all %}
             {
                 id: {{ record.id }},
-                data: {{ record.data|safe }},
-                display: "{% get_record_display attachment record %}"
+                data: {{ record.data|json_script }},
+                display: "{{ record|record_display:attachment|escapejs }}"
             }{% if not forloop.last %},{% endif %}
             {% endfor %}
         ]
@@ -445,6 +468,28 @@ function handleFilterChange(selectElement) {
         finalSelect.innerHTML = `<option value="">-- Select from dataset --</option><option value="other">🆕 Other (not in list)</option>`;
     }
     
+    // Clear hidden input
+    const hiddenInput = document.getElementById(`hidden_dataset_${attachment.datasetId}`);
+    if (hiddenInput) {
+        hiddenInput.value = '';
+    }
+    
+    // Hide new identity form
+    const newIdentityForm = document.getElementById(`new-identity-form-${attachmentId}`);
+    if (newIdentityForm) {
+        newIdentityForm.style.display = 'none';
+    }
+    
+    // If no filters are selected, show all records
+    const hasAnyFilterSelected = attachment.filterColumns.some((_, i) => {
+        const filterSelect = document.getElementById(`filter_${attachmentId}_${i}`);
+        return filterSelect && filterSelect.value;
+    });
+    
+    if (!hasAnyFilterSelected) {
+        updateFinalSelection(attachmentId, attachment.records);
+    }
+    
     // Get filtered records based on current selections
     const filteredRecords = getFilteredRecords(attachmentId, currentFilters);
     
@@ -468,22 +513,25 @@ function handleFilterChange(selectElement) {
     }
 }
 
-function updateFinalSelection(attachmentId, filteredRecords) {
+function populateNewIdentityForm(attachmentId) {
     const attachment = attachmentData[attachmentId];
     if (!attachment) return;
     
-    const finalSelect = document.getElementById(`dataset_${attachment.datasetId}`);
-    if (finalSelect) {
-        finalSelect.innerHTML = '<option value="">-- Select from dataset --</option>';
-        
-        filteredRecords.forEach(record => {
-            const option = document.createElement('option');
-            option.value = record.id;
-            option.textContent = record.display;
-            finalSelect.appendChild(option);
-        });
-        
-        finalSelect.innerHTML += '<option value="other">🆕 Other (not in list)</option>';
+    // Get current filter values
+    const currentFilters = {};
+    for (let i = 0; i < attachment.filterColumns.length; i++) {
+        const filterSelect = document.getElementById(`filter_${attachmentId}_${i}`);
+        if (filterSelect && filterSelect.value) {
+            currentFilters[filterSelect.dataset.filterColumn] = filterSelect.value;
+        }
+    }
+    
+    // Pre-populate the corresponding input fields
+    for (const [columnName, value] of Object.entries(currentFilters)) {
+        const inputField = document.getElementById(`new_${attachment.datasetId}_${columnName}`);
+        if (inputField) {
+            inputField.value = value;
+        }
     }
 }
 
@@ -504,6 +552,9 @@ document.addEventListener('DOMContentLoaded', function() {
                     firstSelect.appendChild(option);
                 });
             }
+            
+            // Initialize final selection with all records
+            updateFinalSelection(attachmentId, attachment.records);
         }
     }
     
@@ -512,12 +563,27 @@ document.addEventListener('DOMContentLoaded', function() {
     const identitySelects = document.querySelectorAll('[id^="dataset_"]');
     identitySelects.forEach(select => {
         select.addEventListener('change', function() {
+            const datasetId = this.id.replace('dataset_', '');
+            const attachmentId = this.dataset.attachmentId;
+            const hiddenInput = document.getElementById(`hidden_dataset_${datasetId}`);
+            const newIdentityForm = document.getElementById(`new-identity-form-${attachmentId}`);
+            
+            if (hiddenInput) {
+                hiddenInput.value = this.value === 'other' ? 'new' : this.value;
+            }
+            
             if (this.value === 'other') {
-                // Show additional form fields for new identity
-                console.log('Show identity form for new entry');
-            } else if (this.value) {
-                // Load identity data
-                console.log('Load identity data for record:', this.value);
+                // Show new identity form
+                if (newIdentityForm) {
+                    newIdentityForm.style.display = 'block';
+                    // Pre-populate filter columns with selected values
+                    populateNewIdentityForm(attachmentId);
+                }
+            } else {
+                // Hide new identity form
+                if (newIdentityForm) {
+                    newIdentityForm.style.display = 'none';
+                }
             }
         });
     });

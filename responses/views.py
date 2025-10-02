@@ -12,6 +12,7 @@ from django import forms
 import json
 from .models import Response, ResponseAnswer
 from forms.models import Form, FormQuestion
+from master_data.models import MasterDataRecord
 
 class PasswordForm(forms.Form):
     """Form for password protection"""
@@ -127,9 +128,43 @@ class PublicSurveyView(FormView):
     
     def handle_survey_submission(self, form_obj):
         """Handle the survey submission directly from POST data"""
+        # Check for master data selection or new record creation
+        selected_record = None
+        new_record_data = {}
+        
+        for key in self.request.POST.keys():
+            if key.startswith('dataset_'):
+                dataset_id = int(key.replace('dataset_', ''))
+                record_value = self.request.POST.get(key)
+                if record_value and record_value != 'new':
+                    try:
+                        record = MasterDataRecord.objects.get(id=int(record_value), dataset_id=dataset_id)
+                        selected_record = record
+                    except (ValueError, MasterDataRecord.DoesNotExist):
+                        continue
+                elif record_value == 'new':
+                    # Collect new record data
+                    for post_key in self.request.POST.keys():
+                        if post_key.startswith(f'new_{dataset_id}_'):
+                            column_name = post_key.replace(f'new_{dataset_id}_', '')
+                            value = self.request.POST.get(post_key)
+                            if value:  # Only include non-empty values
+                                new_record_data[column_name] = value
+                    
+                    # Create new record if we have data
+                    if new_record_data:
+                        from master_data.models import MasterDataSet
+                        dataset = MasterDataSet.objects.get(id=dataset_id)
+                        selected_record = MasterDataRecord.objects.create(
+                            dataset=dataset,
+                            data=new_record_data
+                        )
+                        break  # Use the first valid new record
+        
         # Create response record
         response = Response.objects.create(
             form=form_obj,
+            record=selected_record,
             session_key=self.request.session.session_key,
             ip_address=self.get_client_ip(),
             user_agent=self.request.META.get('HTTP_USER_AGENT', ''),

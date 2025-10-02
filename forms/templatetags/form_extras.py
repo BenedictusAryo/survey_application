@@ -9,6 +9,11 @@ def get_record_display(attachment, record):
     return attachment.get_record_display_value(record)
 
 @register.filter
+def record_display(record, attachment):
+    """Filter version of get_record_display."""
+    return attachment.get_record_display_value(record)
+
+@register.filter
 def json_script(value):
     """Safely convert Python data to JavaScript JSON."""
     return json.dumps(value)

@@ -5,8 +5,10 @@ from django.contrib import messages
 from django.urls import reverse_lazy
 from django.shortcuts import get_object_or_404, redirect, render
 from django.utils import timezone
-from django.http import JsonResponse
+from django.http import JsonResponse, HttpResponse
 from django.db import models
+import json
+from django.utils.text import slugify
  
 from .models import Form, FormQuestion, FormMasterDataAttachment
 from .forms import FormQuestionForm, FormEditForm
@@ -272,6 +274,125 @@ class FormResponsesView(LoginRequiredMixin, DetailView):
         context['complete_count'] = responses.filter(is_complete=True).count()
         
         return context
+
+
+def export_responses_excel(request, pk):
+    """Export form responses as Excel, joining any attached master data sets."""
+    # Permission: only owner or editors can export
+    form_obj = Form.objects.filter(
+        pk=pk
+    ).filter(
+        models.Q(owner=request.user) | models.Q(editors=request.user)
+    ).first()
+
+    if not form_obj:
+        return HttpResponse('Not found or permission denied', status=403)
+
+    # Base response columns
+    base_headers = [
+        'response_id', 'submitted_at', 'updated_at', 'is_complete',
+        'user', 'record_id', 'record_display', 'ip_address', 'user_agent'
+    ]
+
+    # Master data attachment columns (prefixed by dataset name)
+    md_attachments = form_obj.master_data_attachments.select_related('dataset').all()
+    md_columns = []  # list of (attach, col, header)
+    for attach in md_attachments:
+        cols = attach.get_visible_columns()
+        for col in cols:
+            header = f"{attach.dataset.name} - {col.name}"
+            md_columns.append((attach, col, header))
+
+    # Question headers
+    questions = list(form_obj.questions.all())
+    question_headers = [q.text for q in questions]
+
+    # Build full header row
+    headers = base_headers + [h for (_, _, h) in md_columns] + question_headers
+
+    # Fetch all responses
+    responses_qs = form_obj.responses.select_related('user', 'record').prefetch_related('answers')
+
+    # Build data rows
+    data_rows = []
+    for resp in responses_qs.all():
+        row = []
+        row.append(resp.id)
+        row.append(resp.submitted_at.strftime('%Y-%m-%d %H:%M:%S') if resp.submitted_at else '')
+        row.append(resp.updated_at.strftime('%Y-%m-%d %H:%M:%S') if resp.updated_at else '')
+        row.append('Yes' if resp.is_complete else 'No')
+        row.append(resp.user.username if resp.user else '')
+        row.append(resp.record.id if resp.record else '')
+        
+        # For record display, try attachments' display_column if available
+        record_display = ''
+        if resp.record:
+            # If the response's record matches any attachment dataset, get display value
+            for attach in md_attachments:
+                if resp.record.dataset_id == attach.dataset_id:
+                    record_display = attach.get_record_display_value(resp.record)
+                    break
+            if not record_display:
+                # fallback to record __str__
+                record_display = str(resp.record)
+
+        row.append(record_display)
+        row.append(resp.ip_address or '')
+        row.append(resp.user_agent or '')
+
+        # Master data columns values
+        for attach, col, header in md_columns:
+            value = ''
+            if resp.record and resp.record.dataset_id == attach.dataset_id:
+                try:
+                    value = resp.record.data.get(col.name, '')
+                except Exception:
+                    value = ''
+            row.append(value)
+
+        # Answers: build mapping question_id -> value
+        answers_map = {a.question_id: a.value for a in resp.answers.all()}
+        for q in questions:
+            val = answers_map.get(q.id, '')
+            if isinstance(val, (dict, list)):
+                try:
+                    val = json.dumps(val, ensure_ascii=False)
+                except Exception:
+                    val = str(val)
+            row.append(val)
+
+        data_rows.append(row)
+
+    # Create DataFrame
+    import pandas as pd
+    df = pd.DataFrame(data_rows, columns=headers)
+
+    # Generate Excel file
+    filename = f"{form_obj.slug or slugify(form_obj.title)}-responses.xlsx"
+    response = HttpResponse(
+        content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+    )
+    response['Content-Disposition'] = f'attachment; filename="{filename}"'
+
+    # Write to Excel with auto-column width
+    with pd.ExcelWriter(response, engine='openpyxl') as writer:
+        df.to_excel(writer, index=False, sheet_name='Responses')
+        
+        # Auto-adjust column widths
+        worksheet = writer.sheets['Responses']
+        from openpyxl.utils import get_column_letter
+        
+        for idx, col in enumerate(df.columns, start=1):
+            max_length = max(
+                df[col].astype(str).apply(len).max() if len(df) > 0 else 0,
+                len(str(col))
+            )
+            # Add some padding and cap at 50
+            adjusted_width = min(max_length + 2, 50)
+            column_letter = get_column_letter(idx)
+            worksheet.column_dimensions[column_letter].width = adjusted_width
+
+    return response
 
 class FormQRCodeView(DetailView):
     model = Form
