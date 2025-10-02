@@ -230,9 +230,12 @@
                                     id="dataset_{{ attachment.dataset.id }}"
                                     data-attachment-id="{{ attachment.id }}">
                                 <option value="">-- Select from {{ attachment.dataset.name }} --</option>
-                                {% for record in attachment.dataset.records.all %}
-                                    <option value="{{ record.id }}">{% get_record_display attachment record %}</option>
-                                {% endfor %}
+                                {% if not attachment.filter_columns %}
+                                    {# Only pre-populate if no filters are configured #}
+                                    {% for record in attachment.dataset.records.all %}
+                                        <option value="{{ record.id }}">{% get_record_display attachment record %}</option>
+                                    {% endfor %}
+                                {% endif %}
                                 <option value="other">🆕 Other (not in list)</option>
                             </select>
                         </div>
@@ -396,23 +399,36 @@
 {% block extra_scripts %}
 <script>
 // Master data filter handling
-const attachmentData = {
-    {% for attachment in master_data_attachments %}
-    {{ attachment.id }}: {
-        filterColumns: {{ attachment.filter_columns|json_script }},
-        datasetId: {{ attachment.dataset.id }},
-        records: [
-            {% for record in attachment.dataset.records.all %}
-            {
-                id: {{ record.id }},
-                data: {{ record.data|json_script }},
-                display: "{{ record|record_display:attachment|escapejs }}"
-            }{% if not forloop.last %},{% endif %}
-            {% endfor %}
-        ]
-    }{% if not forloop.last %},{% endif %}
-    {% endfor %}
+const attachmentData = {};
+
+{% for attachment in master_data_attachments %}
+attachmentData[{{ attachment.id }}] = {
+    filterColumns: {{ attachment.filter_columns|json_script|safe }},
+    datasetId: {{ attachment.dataset.id }},
+    records: []
 };
+
+{% for record in attachment.dataset.records.all %}
+attachmentData[{{ attachment.id }}].records.push({
+    id: {{ record.id }},
+    data: {{ record.data|json_script|safe }},
+    display: "{{ record|record_display:attachment|escapejs }}"
+});
+{% endfor %}
+{% endfor %}
+
+// Debug: Log attachment data on load
+console.log('Attachment Data:', attachmentData);
+console.log('Number of attachments:', Object.keys(attachmentData).length);
+
+// Debug each attachment
+for (const [id, data] of Object.entries(attachmentData)) {
+    console.log(`Attachment ${id}:`, {
+        filterColumns: data.filterColumns,
+        recordCount: data.records.length,
+        firstRecord: data.records[0]
+    });
+}
 
 function getFilteredRecords(attachmentId, currentFilters) {
     const attachment = attachmentData[attachmentId];
@@ -438,12 +454,52 @@ function getUniqueValues(records, column) {
     return Array.from(values).sort();
 }
 
+function updateFinalSelection(attachmentId, records) {
+    const attachment = attachmentData[attachmentId];
+    if (!attachment) {
+        console.error('Attachment not found in updateFinalSelection:', attachmentId);
+        return;
+    }
+    
+    const finalSelect = document.getElementById(`dataset_${attachment.datasetId}`);
+    if (!finalSelect) {
+        console.error('Final select not found:', `dataset_${attachment.datasetId}`);
+        return;
+    }
+    
+    console.log(`Updating final selection for attachment ${attachmentId} with ${records.length} records`);
+    
+    // Clear existing options except the placeholder and "other" option
+    finalSelect.innerHTML = `<option value="">-- Select from dataset --</option>`;
+    
+    // Add filtered records
+    records.forEach(record => {
+        const option = document.createElement('option');
+        option.value = record.id;
+        option.textContent = record.display;
+        finalSelect.appendChild(option);
+    });
+    
+    console.log(`Added ${records.length} options to final dropdown`);
+    
+    // Add "other" option at the end
+    const otherOption = document.createElement('option');
+    otherOption.value = 'other';
+    otherOption.textContent = '🆕 Other (not in list)';
+    finalSelect.appendChild(otherOption);
+}
+
 function handleFilterChange(selectElement) {
     const attachmentId = parseInt(selectElement.dataset.attachmentId);
     const filterIndex = parseInt(selectElement.dataset.filterIndex);
     const attachment = attachmentData[attachmentId];
     
-    if (!attachment) return;
+    console.log(`Filter changed: attachment=${attachmentId}, filterIndex=${filterIndex}, value=${selectElement.value}`);
+    
+    if (!attachment) {
+        console.error('Attachment not found:', attachmentId);
+        return;
+    }
     
     // Get current filter values up to this point
     const currentFilters = {};
@@ -453,6 +509,8 @@ function handleFilterChange(selectElement) {
             currentFilters[filterSelect.dataset.filterColumn] = filterSelect.value;
         }
     }
+    
+    console.log('Current filters:', currentFilters);
     
     // Clear subsequent filter dropdowns
     for (let i = filterIndex + 1; i < attachment.filterColumns.length; i++) {
@@ -480,26 +538,35 @@ function handleFilterChange(selectElement) {
         newIdentityForm.style.display = 'none';
     }
     
-    // If no filters are selected, show all records
+    // If no filters are selected, don't show any records (keep empty)
     const hasAnyFilterSelected = attachment.filterColumns.some((_, i) => {
         const filterSelect = document.getElementById(`filter_${attachmentId}_${i}`);
         return filterSelect && filterSelect.value;
     });
     
+    console.log('Has any filter selected:', hasAnyFilterSelected);
+    
     if (!hasAnyFilterSelected) {
-        updateFinalSelection(attachmentId, attachment.records);
+        // All filters cleared, keep final dropdown empty
+        console.log('No filters selected, keeping final dropdown empty');
+        return;
     }
     
     // Get filtered records based on current selections
     const filteredRecords = getFilteredRecords(attachmentId, currentFilters);
+    console.log(`Filtered records (${filteredRecords.length}):`, filteredRecords);
     
     // Load values for next filter if exists
     if (filterIndex + 1 < attachment.filterColumns.length) {
         const nextFilterColumn = attachment.filterColumns[filterIndex + 1];
         const nextSelect = document.getElementById(`filter_${attachmentId}_${filterIndex + 1}`);
         
+        console.log(`Loading next filter: ${nextFilterColumn}`);
+        
         if (nextSelect) {
             const values = getUniqueValues(filteredRecords, nextFilterColumn);
+            console.log(`Next filter values (${values.length}):`, values);
+            
             values.forEach(value => {
                 const option = document.createElement('option');
                 option.value = value;
@@ -509,6 +576,7 @@ function handleFilterChange(selectElement) {
         }
     } else {
         // This is the last filter, populate final selection
+        console.log('Last filter reached, updating final selection');
         updateFinalSelection(attachmentId, filteredRecords);
     }
 }
@@ -537,14 +605,22 @@ function populateNewIdentityForm(attachmentId) {
 
 // Initialize filter dropdowns on page load
 document.addEventListener('DOMContentLoaded', function() {
+    console.log('Initializing filters...');
+    
     for (const [attachmentId, attachment] of Object.entries(attachmentData)) {
-        if (attachment.filterColumns.length > 0) {
+        console.log(`Processing attachment ${attachmentId}:`, attachment);
+        
+        if (attachment.filterColumns && attachment.filterColumns.length > 0) {
             // Load values for first filter
             const firstFilterColumn = attachment.filterColumns[0];
             const firstSelect = document.getElementById(`filter_${attachmentId}_0`);
             
+            console.log(`First filter column: ${firstFilterColumn}, Select element:`, firstSelect);
+            
             if (firstSelect) {
                 const values = getUniqueValues(attachment.records, firstFilterColumn);
+                console.log(`Unique values for ${firstFilterColumn}:`, values);
+                
                 values.forEach(value => {
                     const option = document.createElement('option');
                     option.value = value;
@@ -553,7 +629,11 @@ document.addEventListener('DOMContentLoaded', function() {
                 });
             }
             
-            // Initialize final selection with all records
+            // Do NOT initialize final selection - wait for user to select filters
+            // Keep the final dropdown empty until filters are selected
+        } else {
+            // No filters configured, show all records in final selection
+            console.log(`No filters for attachment ${attachmentId}, showing all records`);
             updateFinalSelection(attachmentId, attachment.records);
         }
     }
