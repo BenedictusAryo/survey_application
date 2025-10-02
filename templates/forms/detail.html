@@ -391,6 +391,14 @@ if (typeof htmx !== 'undefined') {
                 window.location.reload();
             }, 1500);
         }
+        
+        if (evt.detail.xhr.status === 200 && evt.detail.pathInfo.pathname.includes('master-data/configure')) {
+            // Close modal after successful configuration
+            closeConfigureModal();
+            
+            // Show success message
+            showToast('Master data configuration updated!', 'success');
+        }
     });
 }
 
@@ -398,8 +406,39 @@ if (typeof htmx !== 'undefined') {
 document.addEventListener('keydown', function(e) {
     if (e.key === 'Escape') {
         closeAttachModal();
+        closeConfigureModal();
     }
 });
+
+function configureAttachment(attachmentId) {
+    const modal = document.getElementById('configure-attachment-modal');
+    const content = document.getElementById('configure-modal-content');
+    
+    // Show loading spinner
+    content.innerHTML = '<div class="loading loading-spinner loading-lg mx-auto"></div>';
+    modal.classList.add('modal-open');
+    
+    // Load configuration form
+    if (typeof htmx !== 'undefined') {
+        htmx.ajax('GET', `/forms/{{ form.pk }}/master-data/configure/${attachmentId}/`, {
+            target: '#configure-modal-content'
+        });
+    } else {
+        // Fallback
+        fetch(`/forms/{{ form.pk }}/master-data/configure/${attachmentId}/`)
+            .then(response => response.text())
+            .then(html => {
+                content.innerHTML = html;
+            })
+            .catch(error => {
+                content.innerHTML = `<div class="alert alert-error"><span>Error loading configuration: ${error.message}</span></div>`;
+            });
+    }
+}
+
+function closeConfigureModal() {
+    document.getElementById('configure-attachment-modal').classList.remove('modal-open');
+}
 </script>
 
 <!-- Master Data Attachment Modal -->
@@ -409,5 +448,14 @@ document.addEventListener('keydown', function(e) {
         <div class="loading loading-spinner loading-lg mx-auto"></div>
     </div>
     <div class="modal-backdrop" onclick="closeAttachModal()"></div>
+</div>
+
+<!-- Configure Attachment Modal -->
+<div class="modal" id="configure-attachment-modal">
+    <div class="modal-box" id="configure-modal-content">
+        <!-- Content will be loaded via HTMX -->
+        <div class="loading loading-spinner loading-lg mx-auto"></div>
+    </div>
+    <div class="modal-backdrop" onclick="closeConfigureModal()"></div>
 </div>
 {% endblock %}

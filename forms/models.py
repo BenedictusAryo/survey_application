@@ -101,6 +101,12 @@ class FormMasterDataAttachment(models.Model):
     # List of column names from the dataset that should be hidden when this
     # dataset is used in the context of this form. Stored as a JSON list.
     hidden_columns = models.JSONField(default=list, blank=True)
+    # Column name to use for displaying records in dropdowns
+    display_column = models.CharField(max_length=100, blank=True, null=True, 
+                                     help_text="Column to use for displaying records in dropdowns")
+    # List of column names to use as filters (in order) before showing the final selection
+    filter_columns = models.JSONField(default=list, blank=True,
+                                     help_text="Columns to use as cascading filters (e.g., ['Wilayah', 'Lingkungan'])")
     
     class Meta:
         ordering = ['order']
@@ -110,6 +116,41 @@ class FormMasterDataAttachment(models.Model):
         """Return the dataset's columns excluding any hidden columns for this attachment."""
         hidden = set(self.hidden_columns or [])
         return [c for c in self.dataset.columns.all() if c.name not in hidden]
+    
+    def get_record_display_value(self, record):
+        """Get the display value for a record based on the configured display column."""
+        if self.display_column and self.display_column in record.data:
+            return record.data[self.display_column]
+        
+        # Fallback: try to find a name-like column
+        for column in self.dataset.columns.all():
+            if 'nama' in column.name.lower() or 'name' in column.name.lower():
+                if column.name in record.data:
+                    return record.data[column.name]
+        
+        # Last resort: return record ID
+        return f"Record #{record.id}"
+    
+    def get_filter_values(self, filter_column):
+        """Get unique values for a specific filter column."""
+        values = set()
+        for record in self.dataset.records.all():
+            if filter_column in record.data and record.data[filter_column]:
+                values.add(record.data[filter_column])
+        return sorted(list(values))
+    
+    def get_filtered_records(self, filter_values=None):
+        """Get records filtered by the specified filter values."""
+        records = self.dataset.records.all()
+        
+        if filter_values and self.filter_columns:
+            for i, filter_column in enumerate(self.filter_columns):
+                if i < len(filter_values) and filter_values[i]:
+                    records = records.filter(
+                        data__icontains={filter_column: filter_values[i]}
+                    )
+        
+        return records
 
 
 class FormQuestion(models.Model):

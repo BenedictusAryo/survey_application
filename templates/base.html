@@ -3,6 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="csrf-token" content="{{ csrf_token }}">
     <title>{% block title %}Survey Application{% endblock %}</title>
     
     <!-- Tailwind CSS and DaisyUI -->
@@ -11,6 +12,17 @@
     
     <!-- HTMX for interactivity -->
     <script src="https://unpkg.com/htmx.org@1.9.8"></script>
+    
+    <!-- HTMX CSRF Configuration -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Configure HTMX to include CSRF token in all requests
+            document.addEventListener('htmx:configRequest', function(evt) {
+                const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+                evt.detail.headers['X-CSRFToken'] = csrfToken;
+            });
+        });
+    </script>
     
     <!-- Alpine.js for reactive components -->
     <script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>

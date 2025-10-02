@@ -378,3 +378,49 @@ class MasterDataDetachView(LoginRequiredMixin, View):
         }
         
         return render(request, 'forms/partials/master_data_attachments.html', context)
+
+
+class MasterDataAttachmentConfigureView(LoginRequiredMixin, View):
+    """HTMX view to configure a master data attachment"""
+    
+    def get(self, request, pk, attachment_id):
+        form_obj = get_object_or_404(Form, pk=pk, owner=request.user)
+        attachment = get_object_or_404(
+            FormMasterDataAttachment, 
+            id=attachment_id, 
+            form=form_obj
+        )
+        
+        context = {
+            'form': form_obj,
+            'attachment': attachment,
+            'available_columns': attachment.dataset.columns.all()
+        }
+        
+        return render(request, 'forms/partials/attachment_configure.html', context)
+    
+    def post(self, request, pk, attachment_id):
+        form_obj = get_object_or_404(Form, pk=pk, owner=request.user)
+        attachment = get_object_or_404(
+            FormMasterDataAttachment, 
+            id=attachment_id, 
+            form=form_obj
+        )
+        
+        # Update the attachment configuration
+        display_column = request.POST.get('display_column', '')
+        hidden_columns = request.POST.getlist('hidden_columns')
+        filter_columns = [col for col in request.POST.getlist('filter_columns') if col]
+        
+        attachment.display_column = display_column if display_column else None
+        attachment.hidden_columns = hidden_columns
+        attachment.filter_columns = filter_columns
+        attachment.save()
+        
+        # Return updated attachments list
+        context = {
+            'form': form_obj,
+            'master_data_attachments': form_obj.master_data_attachments.select_related('dataset').all()
+        }
+        
+        return render(request, 'forms/partials/master_data_attachments.html', context)

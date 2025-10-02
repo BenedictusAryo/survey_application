@@ -1,0 +1,133 @@
+<!-- Attachment Configuration Modal Content -->
+<div class="modal-action-top">
+    <h3 class="font-bold text-lg mb-4">Configure Master Data Attachment</h3>
+    <button class="btn btn-sm btn-circle btn-ghost absolute right-2 top-2" onclick="closeConfigureModal()">✕</button>
+</div>
+
+<form hx-post="{% url 'forms:master_data_configure' form.pk attachment.id %}"
+      hx-target="#master-data-attachments"
+      hx-swap="outerHTML">
+    
+    <div class="form-control w-full mb-4">
+        <label class="label">
+            <span class="label-text font-medium">Dataset: {{ attachment.dataset.name }}</span>
+        </label>
+        <p class="text-sm text-gray-600 mb-4">{{ attachment.dataset.description }}</p>
+    </div>
+    
+    <div class="form-control w-full mb-4">
+        <label class="label">
+            <span class="label-text font-medium">Display Column</span>
+            <span class="label-text-alt text-info">Which column to show in dropdown</span>
+        </label>
+        <select name="display_column" class="select select-bordered w-full">
+            <option value="">-- Auto-detect name column --</option>
+            {% for column in available_columns %}
+                <option value="{{ column.name }}" 
+                        {% if attachment.display_column == column.name %}selected{% endif %}>
+                    {{ column.name }} ({{ column.get_data_type_display }})
+                </option>
+            {% endfor %}
+        </select>
+        <label class="label">
+            <span class="label-text-alt">Leave empty to auto-detect columns with "name" or "nama"</span>
+        </label>
+    </div>
+    
+    <div class="form-control w-full mb-4">
+        <label class="label">
+            <span class="label-text font-medium">Filter Columns</span>
+            <span class="label-text-alt text-info">Cascading filters for large datasets</span>
+        </label>
+        <div class="space-y-2" id="filter-columns-container">
+            {% for filter_column in attachment.filter_columns %}
+                <div class="flex gap-2 items-center filter-column-row">
+                    <select name="filter_columns" class="select select-bordered flex-1">
+                        <option value="">-- Select Filter Column --</option>
+                        {% for column in available_columns %}
+                            <option value="{{ column.name }}" 
+                                    {% if filter_column == column.name %}selected{% endif %}>
+                                {{ column.name }}
+                            </option>
+                        {% endfor %}
+                    </select>
+                    <button type="button" class="btn btn-sm btn-circle btn-error" onclick="removeFilterColumn(this)">✕</button>
+                </div>
+            {% empty %}
+                <div class="flex gap-2 items-center filter-column-row">
+                    <select name="filter_columns" class="select select-bordered flex-1">
+                        <option value="">-- Select Filter Column --</option>
+                        {% for column in available_columns %}
+                            <option value="{{ column.name }}">{{ column.name }}</option>
+                        {% endfor %}
+                    </select>
+                    <button type="button" class="btn btn-sm btn-circle btn-error" onclick="removeFilterColumn(this)">✕</button>
+                </div>
+            {% endfor %}
+        </div>
+        <button type="button" class="btn btn-sm btn-outline mt-2" onclick="addFilterColumn()">
+            + Add Filter Column
+        </button>
+        <label class="label">
+            <span class="label-text-alt">Users will filter by these columns in order before selecting final record (e.g., Wilayah → Lingkungan → Name)</span>
+        </label>
+    </div>
+    
+    <div class="form-control w-full mb-4">
+        <label class="label">
+            <span class="label-text font-medium">Hidden Columns</span>
+            <span class="label-text-alt text-warning">Columns to hide from forms</span>
+        </label>
+        <div class="grid grid-cols-2 gap-2 max-h-40 overflow-y-auto p-2 border border-gray-200 rounded">
+            {% for column in available_columns %}
+                <label class="label cursor-pointer justify-start">
+                    <input type="checkbox" name="hidden_columns" value="{{ column.name }}" 
+                           class="checkbox checkbox-sm mr-2"
+                           {% if column.name in attachment.hidden_columns %}checked{% endif %}>
+                    <span class="label-text text-sm">{{ column.name }}</span>
+                </label>
+            {% endfor %}
+        </div>
+        <label class="label">
+            <span class="label-text-alt">Hidden columns won't appear in forms using this dataset</span>
+        </label>
+    </div>
+    
+    <div class="modal-action">
+        <button type="button" class="btn" onclick="closeConfigureModal()">Cancel</button>
+        <button type="submit" class="btn btn-primary">Save Configuration</button>
+    </div>
+</form>
+
+<script>
+function addFilterColumn() {
+    const container = document.getElementById('filter-columns-container');
+    const availableColumns = [
+        {% for column in available_columns %}
+            {name: '{{ column.name|escapejs }}'},
+        {% endfor %}
+    ];
+    
+    const row = document.createElement('div');
+    row.className = 'flex gap-2 items-center filter-column-row';
+    
+    let optionsHtml = '<option value="">-- Select Filter Column --</option>';
+    availableColumns.forEach(column => {
+        optionsHtml += `<option value="${column.name}">${column.name}</option>`;
+    });
+    
+    row.innerHTML = `
+        <select name="filter_columns" class="select select-bordered flex-1">
+            ${optionsHtml}
+        </select>
+        <button type="button" class="btn btn-sm btn-circle btn-error" onclick="removeFilterColumn(this)">✕</button>
+    `;
+    
+    container.appendChild(row);
+}
+
+function removeFilterColumn(button) {
+    const row = button.closest('.filter-column-row');
+    row.remove();
+}
+</script>

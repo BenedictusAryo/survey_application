@@ -1,7 +1,8 @@
 {% extends 'base.html' %}
 {% load static %}
+{% load form_extras %}
 
-{% block title %}{{ survey_form.title }}{% endblock %}
+{% block title %}{{ form.title }}{% endblock %}
 
 {% block extra_head %}
 <style>
@@ -110,11 +111,33 @@
                             <label class="label">
                                 <span class="label-text font-medium">{{ attachment.dataset.name }}</span>
                             </label>
-                            <select class="select select-bordered w-full" id="dataset_{{ attachment.dataset.id }}">
+                            
+                            <!-- Filter dropdowns (if configured) -->
+                            {% if attachment.filter_columns %}
+                                <div class="space-y-2 mb-2" id="filter-container-{{ attachment.id }}">
+                                    {% for filter_column in attachment.filter_columns %}
+                                        <select class="select select-bordered w-full filter-select" 
+                                                id="filter_{{ attachment.id }}_{{ forloop.counter0 }}"
+                                                data-attachment-id="{{ attachment.id }}"
+                                                data-filter-index="{{ forloop.counter0 }}"
+                                                data-filter-column="{{ filter_column }}"
+                                                onchange="handleFilterChange(this)">
+                                            <option value="">-- Select {{ filter_column }} --</option>
+                                        </select>
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                            
+                            <!-- Final selection dropdown -->
+                            <select class="select select-bordered w-full" 
+                                    id="dataset_{{ attachment.dataset.id }}"
+                                    data-attachment-id="{{ attachment.id }}">
                                 <option value="">-- Select from {{ attachment.dataset.name }} --</option>
-                                {% for record in attachment.dataset.records.all %}
-                                    <option value="{{ record.id }}">{{ record }}</option>
-                                {% endfor %}
+                                {% if not attachment.filter_columns %}
+                                    {% for record in attachment.dataset.records.all %}
+                                        <option value="{{ record.id }}">{% get_record_display attachment record %}</option>
+                                    {% endfor %}
+                                {% endif %}
                                 <option value="other">🆕 Other (not in list)</option>
                             </select>
                         </div>
@@ -247,8 +270,142 @@
 
 {% block extra_scripts %}
 <script>
-// Handle conditional logic and other form interactions
+// Master data filter handling
+const attachmentData = {
+    {% for attachment in master_data_attachments %}
+    {{ attachment.id }}: {
+        filterColumns: {{ attachment.filter_columns|json_script|safe }},
+        datasetId: {{ attachment.dataset.id }},
+        records: [
+            {% for record in attachment.dataset.records.all %}
+            {
+                id: {{ record.id }},
+                data: {{ record.data|safe }},
+                display: "{% get_record_display attachment record %}"
+            }{% if not forloop.last %},{% endif %}
+            {% endfor %}
+        ]
+    }{% if not forloop.last %},{% endif %}
+    {% endfor %}
+};
+
+function getFilteredRecords(attachmentId, currentFilters) {
+    const attachment = attachmentData[attachmentId];
+    if (!attachment) return [];
+    
+    return attachment.records.filter(record => {
+        for (const [column, value] of Object.entries(currentFilters)) {
+            if (record.data[column] !== value) {
+                return false;
+            }
+        }
+        return true;
+    });
+}
+
+function getUniqueValues(records, column) {
+    const values = new Set();
+    records.forEach(record => {
+        if (record.data[column]) {
+            values.add(record.data[column]);
+        }
+    });
+    return Array.from(values).sort();
+}
+
+function handleFilterChange(selectElement) {
+    const attachmentId = parseInt(selectElement.dataset.attachmentId);
+    const filterIndex = parseInt(selectElement.dataset.filterIndex);
+    const attachment = attachmentData[attachmentId];
+    
+    if (!attachment) return;
+    
+    // Get current filter values up to this point
+    const currentFilters = {};
+    for (let i = 0; i <= filterIndex; i++) {
+        const filterSelect = document.getElementById(`filter_${attachmentId}_${i}`);
+        if (filterSelect && filterSelect.value) {
+            currentFilters[filterSelect.dataset.filterColumn] = filterSelect.value;
+        }
+    }
+    
+    // Clear subsequent filter dropdowns
+    for (let i = filterIndex + 1; i < attachment.filterColumns.length; i++) {
+        const nextSelect = document.getElementById(`filter_${attachmentId}_${i}`);
+        if (nextSelect) {
+            nextSelect.innerHTML = `<option value="">-- Select ${nextSelect.dataset.filterColumn} --</option>`;
+        }
+    }
+    
+    // Clear final selection
+    const finalSelect = document.getElementById(`dataset_${attachment.datasetId}`);
+    if (finalSelect) {
+        finalSelect.innerHTML = `<option value="">-- Select from dataset --</option><option value="other">🆕 Other (not in list)</option>`;
+    }
+    
+    // Get filtered records based on current selections
+    const filteredRecords = getFilteredRecords(attachmentId, currentFilters);
+    
+    // Load values for next filter if exists
+    if (filterIndex + 1 < attachment.filterColumns.length) {
+        const nextFilterColumn = attachment.filterColumns[filterIndex + 1];
+        const nextSelect = document.getElementById(`filter_${attachmentId}_${filterIndex + 1}`);
+        
+        if (nextSelect) {
+            const values = getUniqueValues(filteredRecords, nextFilterColumn);
+            values.forEach(value => {
+                const option = document.createElement('option');
+                option.value = value;
+                option.textContent = value;
+                nextSelect.appendChild(option);
+            });
+        }
+    } else {
+        // This is the last filter, populate final selection
+        updateFinalSelection(attachmentId, filteredRecords);
+    }
+}
+
+function updateFinalSelection(attachmentId, filteredRecords) {
+    const attachment = attachmentData[attachmentId];
+    if (!attachment) return;
+    
+    const finalSelect = document.getElementById(`dataset_${attachment.datasetId}`);
+    if (finalSelect) {
+        finalSelect.innerHTML = '<option value="">-- Select from dataset --</option>';
+        
+        filteredRecords.forEach(record => {
+            const option = document.createElement('option');
+            option.value = record.id;
+            option.textContent = record.display;
+            finalSelect.appendChild(option);
+        });
+        
+        finalSelect.innerHTML += '<option value="other">🆕 Other (not in list)</option>';
+    }
+}
+
+// Initialize filter dropdowns on page load
 document.addEventListener('DOMContentLoaded', function() {
+    for (const [attachmentId, attachment] of Object.entries(attachmentData)) {
+        if (attachment.filterColumns.length > 0) {
+            // Load values for first filter
+            const firstFilterColumn = attachment.filterColumns[0];
+            const firstSelect = document.getElementById(`filter_${attachmentId}_0`);
+            
+            if (firstSelect) {
+                const values = getUniqueValues(attachment.records, firstFilterColumn);
+                values.forEach(value => {
+                    const option = document.createElement('option');
+                    option.value = value;
+                    option.textContent = value;
+                    firstSelect.appendChild(option);
+                });
+            }
+        }
+    }
+    
+    // Handle conditional logic and other form interactions
     // Identity selection handling
     const identitySelects = document.querySelectorAll('[id^="dataset_"]');
     identitySelects.forEach(select => {

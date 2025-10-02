@@ -20,4 +20,5 @@ urlpatterns = [
     path('<int:pk>/master-data/available/', views.MasterDataAttachmentListView.as_view(), name='master_data_available'),
     path('<int:pk>/master-data/attach/', views.MasterDataAttachView.as_view(), name='master_data_attach'),
     path('<int:pk>/master-data/detach/<int:attachment_id>/', views.MasterDataDetachView.as_view(), name='master_data_detach'),
+    path('<int:pk>/master-data/configure/<int:attachment_id>/', views.MasterDataAttachmentConfigureView.as_view(), name='master_data_configure'),
 ]
