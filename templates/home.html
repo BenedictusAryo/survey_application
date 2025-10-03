@@ -40,11 +40,7 @@
                 {% endif %}
             {% else %}
                 <div class="flex flex-col sm:flex-row gap-4 justify-center mt-8">
-                    <a href="{% url 'accounts:register' %}" class="btn btn-primary btn-lg gap-2 shadow-lg hover:shadow-xl">
-                        <i class="fas fa-user-plus"></i>
-                        Get Started
-                    </a>
-                    <a href="{% url 'accounts:login' %}" class="btn btn-outline btn-lg gap-2">
+                    <a href="{% url 'accounts:login' %}" class="btn btn-primary btn-lg gap-2 shadow-lg hover:shadow-xl">
                         <i class="fas fa-sign-in-alt"></i>
                         Sign In
                     </a>

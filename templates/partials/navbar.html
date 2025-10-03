@@ -29,7 +29,7 @@
         <a class="btn btn-ghost normal-case text-xl font-bold hover:bg-white/20 gap-2" href="{% url 'home' %}">
             {% load static %}
             <img src="{% static 'images/logo.png' %}" alt="Logo" class="h-10 w-auto drop-shadow-lg">
-            <span class="hidden sm:inline text-base-content drop-shadow-md text-2xl">Paroki Bintaro Survey Application</span>
+            <span class="hidden sm:inline text-base-content drop-shadow-md sm:text-lg md:text-2xl">Paroki Bintaro Survey Application</span>
         </a>
     </div>
     
@@ -69,16 +69,25 @@
                         <span class="text-xs uppercase text-base-content/60">Account</span>
                     </li>
                     <li>
+                        <a href="{% url 'accounts:index' %}" class="gap-3 hover:bg-primary/10">
+                            <i class="fas fa-tachometer-alt text-primary"></i> 
+                            <span>Dashboard</span>
+                        </a>
+                    </li>
+                    <li>
                         <a href="{% url 'accounts:profile' %}" class="gap-3 hover:bg-primary/10">
                             <i class="fas fa-user text-primary"></i> 
                             <span>My Profile</span>
                         </a>
                     </li>
                     <li class="mt-2 border-t border-base-300 pt-2">
-                        <a href="{% url 'accounts:logout' %}" class="gap-3 hover:bg-error/10 text-error">
-                            <i class="fas fa-sign-out-alt"></i> 
-                            <span>Logout</span>
-                        </a>
+                        <form method="post" action="{% url 'accounts:logout' %}" class="w-full">
+                            {% csrf_token %}
+                            <button type="submit" class="w-full text-left gap-3 hover:bg-error/10 text-error btn btn-ghost justify-start">
+                                <i class="fas fa-sign-out-alt"></i> 
+                                <span>Logout</span>
+                            </button>
+                        </form>
                     </li>
                 </ul>
             </div>
@@ -86,10 +95,6 @@
             <a class="btn btn-ghost gap-2 hover:bg-white/20" href="{% url 'accounts:login' %}">
                 <i class="fas fa-sign-in-alt"></i>
                 <span class="hidden sm:inline">Login</span>
-            </a>
-            <a class="btn btn-white text-primary gap-2 shadow-lg hover:shadow-xl transition-all" href="{% url 'accounts:register' %}">
-                <i class="fas fa-user-plus"></i>
-                <span class="hidden sm:inline font-semibold">Register</span>
             </a>
         {% endif %}
     </div>
