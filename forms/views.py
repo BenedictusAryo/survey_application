@@ -88,6 +88,20 @@ class FormQuestionEditView(LoginRequiredMixin, DetailView):
     model = Form
     template_name = 'forms/questions.html'
     context_object_name = 'form'
+    
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        form_obj = self.object
+        
+        # Get sections with their questions
+        sections = form_obj.sections.prefetch_related('questions').all()
+        context['sections'] = sections
+        
+        # Get questions without section
+        questions_without_section = form_obj.questions.filter(section__isnull=True).order_by('order')
+        context['questions_without_section'] = questions_without_section
+        
+        return context
 
 
 class FormQuestionCreateView(LoginRequiredMixin, CreateView):
