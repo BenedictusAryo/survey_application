@@ -1,4 +1,5 @@
 {% extends 'base.html' %}
+{% load form_extras %}
 
 {% block title %}Manage Questions - {{ form.title }}{% endblock %}
 
@@ -28,7 +29,7 @@
 									<span class="badge badge-error">Required</span>
 								{% endif %}
 							</div>
-							<p class="font-medium">{{ question.text }}</p>
+							<p class="font-medium">{{ question.text|urlize_target_blank }}</p>
 							{% if question.options %}
 								<p class="text-sm text-gray-500 mt-1">Options: {{ question.options|length }}</p>
 							{% endif %}

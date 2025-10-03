@@ -1,4 +1,5 @@
 {% extends 'base.html' %}
+{% load form_extras %}
 
 {% block title %}{{ form.title }} - Form Details{% endblock %}
 
@@ -216,7 +217,7 @@
                                                 </span>
                                             {% endif %}
                                         </div>
-                                        <p class="font-semibold text-lg mb-2">{{ question.text }}</p>
+                                        <p class="font-semibold text-lg mb-2">{{ question.text|urlize_target_blank }}</p>
                                         {% if question.question_type == 'single_select' or question.question_type == 'multi_select' %}
                                             <div class="flex items-center gap-2 text-sm text-base-content/60">
                                                 <i class="fas fa-list"></i>
