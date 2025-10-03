@@ -21,6 +21,16 @@ def json_script(value):
     return json.dumps(value)
 
 @register.filter
+def dict_get(dictionary, key):
+    """
+    Get a value from a dictionary using a key.
+    Usage: {{ my_dict|dict_get:key_variable }}
+    """
+    if not isinstance(dictionary, dict):
+        return None
+    return dictionary.get(key)
+
+@register.filter
 def urlize_target_blank(text):
     """
     Convert URLs in text to clickable links that open in a new tab.
