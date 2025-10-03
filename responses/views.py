@@ -99,11 +99,22 @@ class PublicSurveyView(FormView):
         context['survey_form'] = form_obj
         
         # Get sections and organize questions
-        sections = form_obj.sections.prefetch_related('questions').all()
-        questions_without_section = form_obj.questions.filter(section__isnull=True).all()
+        sections = form_obj.sections.prefetch_related('questions').order_by('order')
+        questions_without_section = form_obj.questions.filter(section__isnull=True).order_by('order')
+        
+        # Create a flattened list of all questions in display order
+        all_questions_ordered = []
+        for section in sections:
+            for question in section.questions.order_by('order'):
+                all_questions_ordered.append(question)
+        
+        # Add ungrouped questions at the end
+        for question in questions_without_section:
+            all_questions_ordered.append(question)
         
         context['sections'] = sections
         context['questions_without_section'] = questions_without_section
+        context['all_questions_ordered'] = all_questions_ordered  # For numbering reference
         context['questions'] = form_obj.questions.all()  # Keep for backward compatibility
         context['master_data_attachments'] = form_obj.master_data_attachments.all()
         return context

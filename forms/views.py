@@ -134,6 +134,14 @@ class FormQuestionCreateView(LoginRequiredMixin, CreateView):
         parent_form = Form.objects.get(pk=self.kwargs.get('pk'))
         form.instance.form = parent_form
         
+        # Auto-assign order if not provided or is 0
+        if not form.instance.order or form.instance.order == 0:
+            # Get the next available order number
+            max_order = parent_form.questions.aggregate(
+                max_order=models.Max('order')
+            )['max_order'] or 0
+            form.instance.order = max_order + 1
+        
         # Handle options from POST data
         options = self._process_options_from_request()
         form.instance.options = options
