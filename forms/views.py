@@ -6,7 +6,8 @@ from django.urls import reverse_lazy
 from django.shortcuts import get_object_or_404, redirect, render
 from django.utils import timezone
 from django.http import JsonResponse, HttpResponse
-from django.db import models
+from django.db import models, transaction
+from django.views.decorators.http import require_http_methods
 import json
 from django.utils.text import slugify
  
@@ -657,3 +658,72 @@ class MasterDataAttachmentConfigureView(LoginRequiredMixin, View):
         }
         
         return render(request, 'forms/partials/master_data_attachments.html', context)
+
+
+@require_http_methods(["POST"])
+def reorder_question(request, pk):
+    """Reorder a question up or down"""
+    question = get_object_or_404(FormQuestion, pk=pk)
+    direction = request.POST.get('direction')  # 'up' or 'down'
+    
+    # Get all questions in the same context (same section or no section)
+    if question.section:
+        questions = list(question.section.questions.order_by('order', 'id'))
+    else:
+        questions = list(question.form.questions.filter(section__isnull=True).order_by('order', 'id'))
+    
+    # Find current index
+    try:
+        current_index = questions.index(question)
+    except ValueError:
+        return JsonResponse({'success': False, 'error': 'Question not found'})
+    
+    # Determine target index
+    if direction == 'up' and current_index > 0:
+        target_index = current_index - 1
+    elif direction == 'down' and current_index < len(questions) - 1:
+        target_index = current_index + 1
+    else:
+        return JsonResponse({'success': False, 'error': 'Cannot move in that direction'})
+    
+    # Swap orders
+    with transaction.atomic():
+        target_question = questions[target_index]
+        question.order, target_question.order = target_question.order, question.order
+        question.save(update_fields=['order'])
+        target_question.save(update_fields=['order'])
+    
+    return JsonResponse({'success': True})
+
+
+@require_http_methods(["POST"])
+def reorder_section(request, pk):
+    """Reorder a section up or down"""
+    section = get_object_or_404(FormSection, pk=pk)
+    direction = request.POST.get('direction')  # 'up' or 'down'
+    
+    # Get all sections for this form
+    sections = list(section.form.sections.order_by('order', 'id'))
+    
+    # Find current index
+    try:
+        current_index = sections.index(section)
+    except ValueError:
+        return JsonResponse({'success': False, 'error': 'Section not found'})
+    
+    # Determine target index
+    if direction == 'up' and current_index > 0:
+        target_index = current_index - 1
+    elif direction == 'down' and current_index < len(sections) - 1:
+        target_index = current_index + 1
+    else:
+        return JsonResponse({'success': False, 'error': 'Cannot move in that direction'})
+    
+    # Swap orders
+    with transaction.atomic():
+        target_section = sections[target_index]
+        section.order, target_section.order = target_section.order, section.order
+        section.save(update_fields=['order'])
+        target_section.save(update_fields=['order'])
+    
+    return JsonResponse({'success': True})

@@ -35,8 +35,12 @@ class FormSectionForm(forms.ModelForm):
         # Add help text
         self.fields['title'].help_text = "Title for this section"
         self.fields['description'].help_text = "Description can include URLs and basic HTML formatting"
-        self.fields['order'].help_text = "Display order (0 = first)"
+        self.fields['order'].help_text = "Order is managed with arrow buttons in the questions page"
         self.fields['image'].help_text = "Optional header image for the section"
+        
+        # Hide order field (managed by arrow buttons)
+        self.fields['order'].widget = forms.HiddenInput()
+        self.fields['order'].required = False
 
 
 class QuestionOptionForm(forms.Form):
@@ -106,9 +110,13 @@ class FormQuestionForm(forms.ModelForm):
         self.fields['section'].help_text = "Optional section to group this question"
         self.fields['text'].help_text = "The question that will be displayed to users"
         self.fields['question_type'].help_text = "Select the type of input for this question"
-        self.fields['order'].help_text = "Display order (0 = first)"
+        self.fields['order'].help_text = "Order is managed with arrow buttons in the questions page"
         self.fields['is_required'].help_text = "Make this question mandatory"
         self.fields['image'].help_text = "Optional image to display with the question"
+        
+        # Hide order field (managed by arrow buttons)
+        self.fields['order'].widget = forms.HiddenInput()
+        self.fields['order'].required = False
         
         # Make section optional
         self.fields['section'].required = False

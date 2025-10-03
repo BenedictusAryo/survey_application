@@ -17,6 +17,10 @@ urlpatterns = [
     path('<int:pk>/sections/add/', views.FormSectionCreateView.as_view(), name='section_add'),
     path('sections/<int:pk>/edit/', views.FormSectionUpdateView.as_view(), name='section_edit'),
     path('sections/<int:pk>/delete/', views.FormSectionDeleteView.as_view(), name='section_delete'),
+    path('sections/<int:pk>/reorder/', views.reorder_section, name='section_reorder'),
+    
+    # Question reordering
+    path('questions/<int:pk>/reorder/', views.reorder_question, name='question_reorder'),
     
     path('<int:pk>/publish/', views.FormPublishView.as_view(), name='publish'),
     path('<int:pk>/responses/', views.FormResponsesView.as_view(), name='responses'),

@@ -118,6 +118,23 @@
         box-shadow: 0 4px 6px rgba(16, 185, 129, 0.3);
     }
     
+    /* Link styling - use secondary color */
+    .question-card a,
+    .section-header a,
+    .identity-section a {
+        color: #f97316;  /* secondary/orange color */
+        text-decoration: underline;
+        font-weight: 600;
+        transition: all 0.2s;
+    }
+    
+    .question-card a:hover,
+    .section-header a:hover,
+    .identity-section a:hover {
+        color: #ea580c;  /* darker secondary on hover */
+        text-decoration: underline;
+    }
+    
     /* Captcha styling */
     .captcha-container {
         display: flex;
@@ -454,7 +471,7 @@
                     </div>
                     <h3 class="text-2xl font-bold mb-4">Ready to Submit?</h3>
                     <p class="text-base-content/70 mb-6 max-w-md mx-auto">
-                        Please review your answers before submitting. Your response will be recorded securely and anonymously.
+                        Please review your answers before submitting.
                     </p>
                     <button type="submit" class="btn btn-primary btn-lg gap-3 px-12 shadow-lg hover:shadow-xl transition-all">
                         <i class="fas fa-check-circle text-2xl"></i>
