@@ -3,51 +3,157 @@
 
 {% block title %}Manage Questions - {{ form.title }}{% endblock %}
 
+{% block extra_head %}
+<style>
+    .section-header {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border-radius: 0.5rem;
+        padding: 1rem;
+        margin-bottom: 1rem;
+    }
+    .section-description {
+        font-size: 0.9rem;
+        opacity: 0.9;
+        margin-top: 0.5rem;
+    }
+    .section-questions {
+        margin-left: 1rem;
+        border-left: 3px solid #e5e7eb;
+        padding-left: 1rem;
+        margin-bottom: 2rem;
+    }
+    .ungrouped-questions {
+        border-left: 3px solid #fbbf24;
+        padding-left: 1rem;
+    }
+</style>
+{% endblock %}
+
 {% block content %}
 <div class="flex justify-between items-center mb-6">
 	<div>
 		<h1 class="text-2xl font-bold">Manage Questions for: {{ form.title }}</h1>
 		<p class="text-gray-600">{{ form.description }}</p>
 	</div>
-	<div>
+	<div class="flex gap-2">
+		<a href="{% url 'forms:section_add' form.pk %}" class="btn btn-secondary btn-sm">Add Section</a>
 		<a href="{% url 'forms:question_add' form.pk %}" class="btn btn-primary btn-sm">Add Question</a>
 		<a href="{% url 'forms:detail' form.pk %}" class="btn btn-outline btn-sm">Back to Form</a>
 	</div>
 </div>
 
-<div class="card bg-base-100 shadow-xl">
-	<div class="card-body">
-		{% if form.questions.all %}
-			<div class="space-y-3">
-				{% for question in form.questions.all %}
-					<div class="p-4 border border-base-300 rounded-lg flex justify-between items-start">
-						<div>
-							<div class="flex items-center gap-2 mb-2">
-								<span class="badge badge-outline">Q{{ question.order }}</span>
-								<span class="badge">{{ question.get_question_type_display }}</span>
-								{% if question.is_required %}
-									<span class="badge badge-error">Required</span>
-								{% endif %}
-							</div>
-							<p class="font-medium">{{ question.text|urlize_target_blank }}</p>
-							{% if question.options %}
-								<p class="text-sm text-gray-500 mt-1">Options: {{ question.options|length }}</p>
-							{% endif %}
-						</div>
-						<div class="flex gap-2">
-							<a href="{% url 'forms:question_edit' question.pk %}" class="btn btn-outline btn-sm">Edit</a>
-							<a href="{% url 'forms:question_delete' question.pk %}" class="btn btn-error btn-sm">Delete</a>
+<div class="space-y-6">
+	<!-- Sections with Questions -->
+	{% for section in sections %}
+		<div class="card bg-base-100 shadow-xl">
+			<div class="section-header">
+				<div class="flex justify-between items-start">
+					<div class="flex-1">
+						<h3 class="text-xl font-bold">{{ section.title }}</h3>
+						{% if section.description %}
+							<div class="section-description">{{ section.description|safe }}</div>
+						{% endif %}
+						<div class="text-sm opacity-75 mt-2">
+							Order: {{ section.order }} | Questions: {{ section.questions.count }}
 						</div>
 					</div>
-				{% endfor %}
+					<div class="flex gap-2">
+						<a href="{% url 'forms:section_edit' section.pk %}" class="btn btn-sm btn-outline text-white border-white hover:bg-white hover:text-gray-800">Edit</a>
+						<a href="{% url 'forms:section_delete' section.pk %}" class="btn btn-sm btn-error">Delete</a>
+					</div>
+				</div>
+				{% if section.image %}
+					<div class="mt-3">
+						<img src="{{ section.image.url }}" alt="Section image" class="max-w-xs rounded-lg shadow-lg">
+					</div>
+				{% endif %}
 			</div>
-		{% else %}
-			<div class="text-center py-8">
-				<p class="text-gray-500 mb-4">No questions added yet.</p>
-				<a href="{% url 'forms:question_add' form.pk %}" class="btn btn-primary btn-sm">Add Your First Question</a>
+			
+			<div class="card-body">
+				{% if section.questions.all %}
+					<div class="space-y-3">
+						{% for question in section.questions.all %}
+							<div class="p-4 border border-base-300 rounded-lg flex justify-between items-start">
+								<div>
+									<div class="flex items-center gap-2 mb-2">
+										<span class="badge badge-outline">Q{{ question.order }}</span>
+										<span class="badge">{{ question.get_question_type_display }}</span>
+										{% if question.is_required %}
+											<span class="badge badge-error">Required</span>
+										{% endif %}
+									</div>
+									<p class="font-medium">{{ question.text|urlize_target_blank }}</p>
+									{% if question.options %}
+										<p class="text-sm text-gray-500 mt-1">Options: {{ question.options|length }}</p>
+									{% endif %}
+								</div>
+								<div class="flex gap-2">
+									<a href="{% url 'forms:question_edit' question.pk %}" class="btn btn-outline btn-sm">Edit</a>
+									<a href="{% url 'forms:question_delete' question.pk %}" class="btn btn-error btn-sm">Delete</a>
+								</div>
+							</div>
+						{% endfor %}
+					</div>
+				{% else %}
+					<div class="text-center py-4">
+						<p class="text-gray-500 mb-2">No questions in this section yet.</p>
+						<a href="{% url 'forms:question_add' form.pk %}" class="btn btn-primary btn-sm">Add Question to Section</a>
+					</div>
+				{% endif %}
 			</div>
-		{% endif %}
-	</div>
+		</div>
+	{% endfor %}
+
+	<!-- Ungrouped Questions -->
+	{% if questions_without_section %}
+		<div class="card bg-base-100 shadow-xl">
+			<div class="card-header bg-warning text-warning-content p-4 rounded-t-lg">
+				<h3 class="text-lg font-bold">📝 Ungrouped Questions</h3>
+				<p class="text-sm opacity-90">Questions not assigned to any section</p>
+			</div>
+			<div class="card-body">
+				<div class="space-y-3">
+					{% for question in questions_without_section %}
+						<div class="p-4 border border-base-300 rounded-lg flex justify-between items-start">
+							<div>
+								<div class="flex items-center gap-2 mb-2">
+									<span class="badge badge-outline">Q{{ question.order }}</span>
+									<span class="badge">{{ question.get_question_type_display }}</span>
+									{% if question.is_required %}
+										<span class="badge badge-error">Required</span>
+									{% endif %}
+								</div>
+								<p class="font-medium">{{ question.text|urlize_target_blank }}</p>
+								{% if question.options %}
+									<p class="text-sm text-gray-500 mt-1">Options: {{ question.options|length }}</p>
+								{% endif %}
+							</div>
+							<div class="flex gap-2">
+								<a href="{% url 'forms:question_edit' question.pk %}" class="btn btn-outline btn-sm">Edit</a>
+								<a href="{% url 'forms:question_delete' question.pk %}" class="btn btn-error btn-sm">Delete</a>
+							</div>
+						</div>
+					{% endfor %}
+				</div>
+			</div>
+		</div>
+	{% endif %}
+
+	<!-- Empty State -->
+	{% if not sections and not questions_without_section %}
+		<div class="card bg-base-100 shadow-xl">
+			<div class="card-body text-center py-12">
+				<div class="text-6xl mb-4">📝</div>
+				<h3 class="text-xl font-bold mb-2">No questions or sections yet</h3>
+				<p class="text-gray-500 mb-6">Start by creating a section to organize your questions, or add questions directly.</p>
+				<div class="flex gap-4 justify-center">
+					<a href="{% url 'forms:section_add' form.pk %}" class="btn btn-secondary">Create First Section</a>
+					<a href="{% url 'forms:question_add' form.pk %}" class="btn btn-primary">Add First Question</a>
+				</div>
+			</div>
+		</div>
+	{% endif %}
 </div>
 
 {% endblock %}

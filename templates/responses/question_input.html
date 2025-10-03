@@ -1,0 +1,67 @@
+{% comment %}
+Question input partial template for rendering different question types
+Variables: question
+{% endcomment %}
+
+{% if question.question_type == 'text_input' %}
+    <input type="text" name="question_{{ question.id }}" 
+           class="input input-bordered w-full" 
+           placeholder="Your answer..."
+           {% if question.is_required %}required{% endif %}>
+           
+{% elif question.question_type == 'numeric_input' %}
+    <input type="number" name="question_{{ question.id }}" 
+           class="input input-bordered w-full" 
+           placeholder="Enter a number..."
+           {% if question.is_required %}required{% endif %}>
+           
+{% elif question.question_type == 'date_input' %}
+    <input type="date" name="question_{{ question.id }}" 
+           class="input input-bordered w-full"
+           {% if question.is_required %}required{% endif %}>
+           
+{% elif question.question_type == 'single_select' %}
+    <div class="space-y-2">
+        {% for option in question.options %}
+            <label class="cursor-pointer flex items-center space-x-2">
+                <input type="radio" name="question_{{ question.id }}" 
+                       value="{{ option.value }}" class="radio radio-primary"
+                       {% if question.is_required %}required{% endif %}>
+                <span>{{ option.text }}</span>
+            </label>
+        {% endfor %}
+    </div>
+    
+{% elif question.question_type == 'multi_select' %}
+    <div class="space-y-2">
+        {% for option in question.options %}
+            <label class="cursor-pointer flex items-center space-x-2">
+                <input type="checkbox" name="question_{{ question.id }}" 
+                       value="{{ option.value }}" class="checkbox checkbox-primary">
+                <span>{{ option.text }}</span>
+            </label>
+        {% endfor %}
+    </div>
+    
+{% elif question.question_type == 'image_select' %}
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+        {% for option in question.options %}
+            <label class="option-with-image">
+                <input type="radio" name="question_{{ question.id }}" 
+                       value="{{ option.value }}" class="radio radio-primary"
+                       {% if question.is_required %}required{% endif %}>
+                {% if option.image %}
+                    <img src="{{ option.image }}" alt="{{ option.text }}" class="option-image">
+                {% endif %}
+                <span class="flex-1">{{ option.text }}</span>
+            </label>
+        {% endfor %}
+    </div>
+    
+{% elif question.question_type == 'image_prompt' %}
+    <textarea name="question_{{ question.id }}" 
+              class="textarea textarea-bordered w-full" 
+              rows="4" 
+              placeholder="Please describe what you see or provide your response..."
+              {% if question.is_required %}required{% endif %}></textarea>
+{% endif %}

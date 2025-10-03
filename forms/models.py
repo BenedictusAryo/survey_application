@@ -153,6 +153,24 @@ class FormMasterDataAttachment(models.Model):
         return records
 
 
+class FormSection(models.Model):
+    """Sections within a form to group questions"""
+    
+    form = models.ForeignKey(Form, on_delete=models.CASCADE, related_name='sections')
+    title = models.CharField(max_length=200)
+    description = models.TextField(blank=True, help_text="Description can include URLs and HTML")
+    order = models.PositiveIntegerField(default=0)
+    image = models.ImageField(upload_to='section_images/', blank=True, null=True,
+                             help_text="Optional image for the section header")
+    
+    class Meta:
+        ordering = ['order', 'id']
+        unique_together = ['form', 'order']
+    
+    def __str__(self):
+        return f"{self.form.title} - Section {self.order}: {self.title}"
+
+
 class FormQuestion(models.Model):
     """Questions within a form"""
     
@@ -167,6 +185,8 @@ class FormQuestion(models.Model):
     ]
     
     form = models.ForeignKey(Form, on_delete=models.CASCADE, related_name='questions')
+    section = models.ForeignKey(FormSection, on_delete=models.CASCADE, related_name='questions', 
+                               blank=True, null=True, help_text="Optional section to group this question")
     text = models.TextField()
     question_type = models.CharField(max_length=20, choices=QUESTION_TYPES)
     options = models.JSONField(default=list)  # For select options, can include image URLs

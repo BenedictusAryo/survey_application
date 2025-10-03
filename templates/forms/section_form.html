@@ -1,0 +1,181 @@
+{% extends 'base.html' %}
+
+{% block title %}{% if object %}Edit Section{% else %}Add Section{% endif %}{% endblock %}
+
+{% block extra_head %}
+<style>
+    .section-preview {
+        background: #f8fafc;
+        border: 1px solid #e2e8f0;
+        border-radius: 0.5rem;
+        padding: 1rem;
+        margin-bottom: 1rem;
+    }
+    .section-description-preview {
+        margin-top: 0.5rem;
+        font-size: 0.9rem;
+        color: #64748b;
+    }
+    .section-description-preview a {
+        color: #3b82f6;
+        text-decoration: underline;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="min-h-[60vh] flex items-center justify-center">
+    <div class="card w-full max-w-4xl shadow-xl bg-base-100">
+        <div class="card-body">
+            <h2 class="card-title text-2xl mb-4">
+                {% if object %}Edit{% else %}Add{% endif %} Section
+                {% if parent_form %}
+                    <span class="text-sm text-gray-500">for "{{ parent_form.title }}"</span>
+                {% endif %}
+            </h2>
+            
+            <!-- Live Preview -->
+            <div class="section-preview" id="section-preview">
+                <div class="text-xl font-bold mb-2">
+                    <span id="preview-title">Section title will appear here...</span>
+                </div>
+                <div id="preview-description" class="section-description-preview">
+                    Section description will appear here...
+                </div>
+                <div id="preview-image-container" class="mt-3 hidden">
+                    <img id="preview-image" src="" alt="Section image" class="max-w-xs rounded-lg shadow-lg">
+                </div>
+            </div>
+            
+            <form method="post" enctype="multipart/form-data" id="section-form">
+                {% csrf_token %}
+                
+                <!-- Section Title -->
+                <div class="form-control w-full mb-4">
+                    <label class="label" for="{{ form.title.id_for_label }}">
+                        <span class="label-text">Section Title *</span>
+                    </label>
+                    {{ form.title }}
+                    {% if form.title.errors %}
+                        <label class="label"><span class="label-text-alt text-error">{{ form.title.errors.0 }}</span></label>
+                    {% endif %}
+                </div>
+                
+                <!-- Section Description -->
+                <div class="form-control w-full mb-4">
+                    <label class="label" for="{{ form.description.id_for_label }}">
+                        <span class="label-text">Section Description</span>
+                        <span class="label-text-alt">Supports HTML and URLs</span>
+                    </label>
+                    {{ form.description }}
+                    <label class="label">
+                        <span class="label-text-alt">You can include links like &lt;a href="https://example.com"&gt;link text&lt;/a&gt;</span>
+                    </label>
+                    {% if form.description.errors %}
+                        <label class="label"><span class="label-text-alt text-error">{{ form.description.errors.0 }}</span></label>
+                    {% endif %}
+                </div>
+                
+                <!-- Section Order -->
+                <div class="form-control w-full mb-4">
+                    <label class="label" for="{{ form.order.id_for_label }}">
+                        <span class="label-text">Display Order</span>
+                    </label>
+                    {{ form.order }}
+                    {% if form.order.errors %}
+                        <label class="label"><span class="label-text-alt text-error">{{ form.order.errors.0 }}</span></label>
+                    {% endif %}
+                </div>
+                
+                <!-- Section Image -->
+                <div class="form-control w-full mb-4">
+                    <label class="label" for="{{ form.image.id_for_label }}">
+                        <span class="label-text">Section Image (optional)</span>
+                    </label>
+                    {{ form.image }}
+                    <label class="label">
+                        <span class="label-text-alt">Upload an image to display with the section header</span>
+                    </label>
+                    {% if form.image.errors %}
+                        <label class="label"><span class="label-text-alt text-error">{{ form.image.errors.0 }}</span></label>
+                    {% endif %}
+                    {% if object and object.image %}
+                        <div class="mt-2">
+                            <img src="{{ object.image.url }}" alt="Current section image" class="max-w-xs rounded-lg shadow-lg">
+                            <label class="label">
+                                <span class="label-text-alt">Current image (will be replaced if you upload a new one)</span>
+                            </label>
+                        </div>
+                    {% endif %}
+                </div>
+                
+                <!-- Form Actions -->
+                <div class="card-actions justify-end mt-6">
+                    <a href="{% if parent_form %}{% url 'forms:questions' parent_form.pk %}{% else %}{% url 'forms:list' %}{% endif %}" 
+                       class="btn btn-outline">Cancel</a>
+                    <button type="submit" class="btn btn-primary">
+                        {% if object %}Update{% else %}Create{% endif %} Section
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const titleInput = document.getElementById('{{ form.title.id_for_label }}');
+    const descriptionInput = document.getElementById('{{ form.description.id_for_label }}');
+    const imageInput = document.getElementById('{{ form.image.id_for_label }}');
+    
+    const previewTitle = document.getElementById('preview-title');
+    const previewDescription = document.getElementById('preview-description');
+    const previewImageContainer = document.getElementById('preview-image-container');
+    const previewImage = document.getElementById('preview-image');
+    
+    // Function to update preview
+    function updatePreview() {
+        // Update title
+        const title = titleInput.value.trim();
+        previewTitle.textContent = title || 'Section title will appear here...';
+        
+        // Update description with HTML rendering
+        const description = descriptionInput.value.trim();
+        if (description) {
+            previewDescription.innerHTML = description;
+        } else {
+            previewDescription.textContent = 'Section description will appear here...';
+        }
+    }
+    
+    // Function to handle image preview
+    function handleImagePreview(event) {
+        const file = event.target.files[0];
+        if (file) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                previewImage.src = e.target.result;
+                previewImageContainer.classList.remove('hidden');
+            };
+            reader.readAsDataURL(file);
+        } else {
+            previewImageContainer.classList.add('hidden');
+        }
+    }
+    
+    // Event listeners
+    titleInput.addEventListener('input', updatePreview);
+    descriptionInput.addEventListener('input', updatePreview);
+    imageInput.addEventListener('change', handleImagePreview);
+    
+    // Initial preview update
+    updatePreview();
+    
+    // Show existing image in preview if editing
+    {% if object and object.image %}
+        previewImage.src = "{{ object.image.url }}";
+        previewImageContainer.classList.remove('hidden');
+    {% endif %}
+});
+</script>
+{% endblock %}

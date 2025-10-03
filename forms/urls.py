@@ -12,6 +12,12 @@ urlpatterns = [
     path('<int:pk>/questions/add/', views.FormQuestionCreateView.as_view(), name='question_add'),
     path('questions/<int:pk>/edit/', views.FormQuestionUpdateView.as_view(), name='question_edit'),
     path('questions/<int:pk>/delete/', views.FormQuestionDeleteView.as_view(), name='question_delete'),
+    
+    # Section management
+    path('<int:pk>/sections/add/', views.FormSectionCreateView.as_view(), name='section_add'),
+    path('sections/<int:pk>/edit/', views.FormSectionUpdateView.as_view(), name='section_edit'),
+    path('sections/<int:pk>/delete/', views.FormSectionDeleteView.as_view(), name='section_delete'),
+    
     path('<int:pk>/publish/', views.FormPublishView.as_view(), name='publish'),
     path('<int:pk>/responses/', views.FormResponsesView.as_view(), name='responses'),
     path('<int:pk>/responses/export/', views.export_responses_excel, name='responses_export'),

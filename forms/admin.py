@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import Form, FormQuestion, FormCollaboration, FormMasterDataAttachment, QuestionOption
+from .models import Form, FormQuestion, FormCollaboration, FormMasterDataAttachment, QuestionOption, FormSection
 
 @admin.register(Form)
 class FormAdmin(admin.ModelAdmin):
@@ -31,6 +31,29 @@ class FormAdmin(admin.ModelAdmin):
         }),
     )
 
+
+@admin.register(FormSection)
+class FormSectionAdmin(admin.ModelAdmin):
+    list_display = ('title', 'form', 'order', 'question_count')
+    list_filter = ('form',)
+    search_fields = ('title', 'description', 'form__title')
+    list_editable = ('order',)
+    
+    fieldsets = (
+        ('Section Details', {
+            'fields': ('form', 'title', 'description', 'order')
+        }),
+        ('Media', {
+            'fields': ('image',),
+            'description': 'Add images to enhance your section'
+        }),
+    )
+
+    def question_count(self, obj):
+        return obj.questions.count()
+    question_count.short_description = 'Questions'
+
+
 class QuestionOptionInline(admin.TabularInline):
     model = QuestionOption
     extra = 1
@@ -38,15 +61,15 @@ class QuestionOptionInline(admin.TabularInline):
 
 @admin.register(FormQuestion)
 class FormQuestionAdmin(admin.ModelAdmin):
-    list_display = ('text', 'form', 'question_type', 'order', 'is_required')
-    list_filter = ('question_type', 'is_required', 'form')
-    search_fields = ('text', 'form__title')
+    list_display = ('text', 'form', 'section', 'question_type', 'order', 'is_required')
+    list_filter = ('question_type', 'is_required', 'form', 'section')
+    search_fields = ('text', 'form__title', 'section__title')
     list_editable = ('order', 'is_required')
     inlines = [QuestionOptionInline]
     
     fieldsets = (
         ('Question Details', {
-            'fields': ('form', 'text', 'question_type', 'order', 'is_required')
+            'fields': ('form', 'section', 'text', 'question_type', 'order', 'is_required')
         }),
         ('Options & Logic', {
             'fields': ('options', 'logic'),

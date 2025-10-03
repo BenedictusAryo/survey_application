@@ -97,7 +97,14 @@ class PublicSurveyView(FormView):
             return context
         
         context['survey_form'] = form_obj
-        context['questions'] = form_obj.questions.all()
+        
+        # Get sections and organize questions
+        sections = form_obj.sections.prefetch_related('questions').all()
+        questions_without_section = form_obj.questions.filter(section__isnull=True).all()
+        
+        context['sections'] = sections
+        context['questions_without_section'] = questions_without_section
+        context['questions'] = form_obj.questions.all()  # Keep for backward compatibility
         context['master_data_attachments'] = form_obj.master_data_attachments.all()
         return context
     

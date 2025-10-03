@@ -106,6 +106,18 @@
                     {% endif %}
                 </div>
                 
+                <!-- Section Assignment -->
+                <div class="form-control w-full mb-4">
+                    <label class="label" for="{{ form.section.id_for_label }}">
+                        <span class="label-text">Section</span>
+                        <span class="label-text-alt">Optional grouping</span>
+                    </label>
+                    {{ form.section }}
+                    {% if form.section.errors %}
+                        <label class="label"><span class="label-text-alt text-error">{{ form.section.errors.0 }}</span></label>
+                    {% endif %}
+                </div>
+                
                 <!-- Options Section (for select questions) -->
                 <div id="options-section" class="options-container mb-4">
                     <div class="form-control w-full">

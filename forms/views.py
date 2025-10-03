@@ -10,8 +10,8 @@ from django.db import models
 import json
 from django.utils.text import slugify
  
-from .models import Form, FormQuestion, FormMasterDataAttachment
-from .forms import FormQuestionForm, FormEditForm
+from .models import Form, FormQuestion, FormMasterDataAttachment, FormSection
+from .forms import FormQuestionForm, FormEditForm, FormSectionForm
 
 class FormListView(LoginRequiredMixin, ListView):
     model = Form
@@ -44,7 +44,12 @@ class FormDetailView(LoginRequiredMixin, DetailView):
         # Get attached master data sets
         context['master_data_attachments'] = form_obj.master_data_attachments.select_related('dataset').all()
         
-        # Get questions
+        # Get sections and questions organized by section
+        sections = form_obj.sections.all()
+        questions_without_section = form_obj.questions.filter(section__isnull=True).all()
+        
+        context['sections'] = sections
+        context['questions_without_section'] = questions_without_section
         context['questions'] = form_obj.questions.all()
         
         # Get response count
@@ -89,6 +94,16 @@ class FormQuestionCreateView(LoginRequiredMixin, CreateView):
     model = FormQuestion
     form_class = FormQuestionForm
     template_name = 'forms/question_form.html'
+
+    def get_form_kwargs(self):
+        kwargs = super().get_form_kwargs()
+        # Pass the parent form instance to the form
+        try:
+            parent_form = Form.objects.get(pk=self.kwargs.get('pk'))
+            kwargs['form_instance'] = parent_form
+        except Form.DoesNotExist:
+            pass
+        return kwargs
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -177,6 +192,62 @@ class FormQuestionDeleteView(LoginRequiredMixin, DeleteView):
 
     def get_success_url(self):
         return reverse_lazy('forms:questions', kwargs={'pk': self.object.form.pk})
+
+
+# Section Management Views
+class FormSectionCreateView(LoginRequiredMixin, CreateView):
+    model = FormSection
+    form_class = FormSectionForm
+    template_name = 'forms/section_form.html'
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        # Add parent form info for the template
+        try:
+            parent_form = Form.objects.get(pk=self.kwargs.get('pk'))
+            context['parent_form'] = parent_form
+        except Form.DoesNotExist:
+            pass
+        return context
+
+    def form_valid(self, form):
+        # Attach to parent form
+        parent_form = Form.objects.get(pk=self.kwargs.get('pk'))
+        form.instance.form = parent_form
+        
+        messages.success(self.request, 'Section created successfully')
+        return super().form_valid(form)
+
+    def get_success_url(self):
+        return reverse_lazy('forms:questions', kwargs={'pk': self.object.form.pk})
+
+
+class FormSectionUpdateView(LoginRequiredMixin, UpdateView):
+    model = FormSection
+    form_class = FormSectionForm
+    template_name = 'forms/section_form.html'
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        # Add parent form info for the template
+        context['parent_form'] = self.object.form
+        return context
+
+    def form_valid(self, form):
+        messages.success(self.request, 'Section updated successfully')
+        return super().form_valid(form)
+
+    def get_success_url(self):
+        return reverse_lazy('forms:questions', kwargs={'pk': self.object.form.pk})
+
+
+class FormSectionDeleteView(LoginRequiredMixin, DeleteView):
+    model = FormSection
+    template_name = 'forms/section_confirm_delete.html'
+
+    def get_success_url(self):
+        return reverse_lazy('forms:questions', kwargs={'pk': self.object.form.pk})
+
 
 class FormPublishView(LoginRequiredMixin, View):
     """View to handle form publishing and unpublishing"""
