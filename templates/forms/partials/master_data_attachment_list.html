@@ -22,7 +22,8 @@
                                     hx-post="{% url 'forms:master_data_attach' form.pk %}"
                                     hx-vals='{"dataset_id": {{ dataset.id }}}'
                                     hx-target="#master-data-attachments"
-                                    hx-swap="outerHTML">
+                                    hx-swap="outerHTML"
+                                    hx-on::after-swap="closeAttachModal(); showToast('Master data attached successfully!', 'success')">
                                 Attach
                             </button>
                         </div>

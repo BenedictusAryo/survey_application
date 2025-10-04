@@ -130,6 +130,18 @@ class FormQuestionCreateView(LoginRequiredMixin, CreateView):
             pass
         return context
 
+    def get_initial(self):
+        """Pre-populate the section field if section parameter is provided"""
+        initial = super().get_initial()
+        section_id = self.request.GET.get('section')
+        if section_id:
+            try:
+                section = FormSection.objects.get(pk=section_id)
+                initial['section'] = section
+            except FormSection.DoesNotExist:
+                pass
+        return initial
+
     def form_valid(self, form):
         # Attach to parent form
         parent_form = Form.objects.get(pk=self.kwargs.get('pk'))
@@ -237,6 +249,14 @@ class FormSectionCreateView(LoginRequiredMixin, CreateView):
         # Attach to parent form
         parent_form = Form.objects.get(pk=self.kwargs.get('pk'))
         form.instance.form = parent_form
+        
+        # Auto-assign order if not provided or is 0
+        if not form.instance.order or form.instance.order == 0:
+            # Get the next available order number
+            max_order = parent_form.sections.aggregate(
+                max_order=models.Max('order')
+            )['max_order'] or 0
+            form.instance.order = max_order + 1
         
         messages.success(self.request, 'Section created successfully')
         return super().form_valid(form)

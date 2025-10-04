@@ -76,16 +76,8 @@
                     {% endif %}
                 </div>
                 
-                <!-- Section Order -->
-                <div class="form-control w-full mb-4">
-                    <label class="label" for="{{ form.order.id_for_label }}">
-                        <span class="label-text">Display Order</span>
-                    </label>
-                    {{ form.order }}
-                    {% if form.order.errors %}
-                        <label class="label"><span class="label-text-alt text-error">{{ form.order.errors.0 }}</span></label>
-                    {% endif %}
-                </div>
+                <!-- Hidden Order Field -->
+                {{ form.order }}
                 
                 <!-- Section Image -->
                 <div class="form-control w-full mb-4">
