@@ -207,6 +207,12 @@ LOGGING = {
             'filename': BASE_DIR / 'logs' / 'django.log',
             'formatter': 'verbose',
         },
+        'error_file': {
+            'level': 'ERROR',
+            'class': 'logging.FileHandler',
+            'filename': BASE_DIR / 'logs' / 'error.log',
+            'formatter': 'verbose',
+        },
         'console': {
             'level': 'INFO',
             'class': 'logging.StreamHandler',
@@ -214,22 +220,23 @@ LOGGING = {
         },
     },
     'root': {
-        'handlers': ['file', 'console'],
+        'handlers': ['file', 'error_file', 'console'],
         'level': 'INFO',
     },
     'loggers': {
         'django': {
-            'handlers': ['file', 'console'],
+            'handlers': ['file', 'error_file', 'console'],
             'level': 'INFO',
             'propagate': False,
         },
         'django.request': {
-            'handlers': ['file', 'console'],
+            'handlers': ['file', 'error_file', 'console'],
             'level': 'ERROR',
             'propagate': False,
         },
     },
 }
+
 
 # Ensure logs directory exists
 (BASE_DIR / 'logs').mkdir(parents=True, exist_ok=True)
