@@ -213,31 +213,49 @@ document.addEventListener('DOMContentLoaded', function() {
     // Question types that require options
     const optionRequiredTypes = ['single_select', 'multi_select', 'image_select'];
     
+    // Track if we've initialized existing options
+    let hasInitializedOptions = false;
+    
     // Initialize existing options for edit mode
     {% if object and object.options %}
         try {
             const existingOptions = JSON.parse('{{ object.options|escapejs }}');
-            existingOptions.forEach(option => {
-                addOption(option.text || '', option.value || '');
-            });
+            if (existingOptions && existingOptions.length > 0) {
+                existingOptions.forEach(option => {
+                    addOption(option.text || '', option.value || '');
+                });
+                hasInitializedOptions = true;
+            }
         } catch (e) {
             console.log('No existing options to load');
         }
     {% endif %}
     
+    // Track previous question type to detect changes
+    let previousQuestionType = questionTypeSelect.value;
+    
     // Show/hide options based on question type
     function toggleOptionsSection() {
         const questionType = questionTypeSelect.value;
-        if (optionRequiredTypes.includes(questionType)) {
+        const wasOptionType = optionRequiredTypes.includes(previousQuestionType);
+        const isOptionType = optionRequiredTypes.includes(questionType);
+        
+        if (isOptionType) {
             optionsSection.classList.add('active');
-            // Add default options if none exist
-            if (optionsList.children.length === 0) {
+            // Only add default options if:
+            // 1. No options exist in the list
+            // 2. We're switching FROM a non-option type TO an option type
+            // 3. We haven't already initialized existing options (edit mode)
+            if (optionsList.children.length === 0 && !hasInitializedOptions && !wasOptionType) {
                 addOption('Option 1', '');
                 addOption('Option 2', '');
             }
         } else {
             optionsSection.classList.remove('active');
         }
+        
+        // Update previous type for next comparison
+        previousQuestionType = questionType;
         updatePreview();
     }
     
