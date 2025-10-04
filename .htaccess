@@ -1,21 +1,24 @@
+# DO NOT REMOVE. CLOUDLINUX PASSENGER CONFIGURATION BEGIN
+PassengerAppRoot "/home/parh4868/public_html/survey.parokibintaro.org"
+PassengerBaseURI "/"
+PassengerPython "/home/parh4868/virtualenv/public_html/survey.parokibintaro.org/3.11/bin/python"
+# DO NOT REMOVE. CLOUDLINUX PASSENGER CONFIGURATION END
+
+# DO NOT REMOVE OR MODIFY. CLOUDLINUX ENV VARS CONFIGURATION BEGIN
+<IfModule Litespeed>
+</IfModule>
+# DO NOT REMOVE OR MODIFY. CLOUDLINUX ENV VARS CONFIGURATION END
+
+# Static and Media Files Configuration
 RewriteEngine On
 
-# Handle static files directly (bypass Django)
-RewriteCond %{REQUEST_URI} ^/static/(.*)$
-RewriteCond %{DOCUMENT_ROOT}/staticfiles/%1 -f
-RewriteRule ^static/(.*)$ /staticfiles/$1 [L]
+# Serve static files directly (relative path since app is in same directory)
+RewriteRule ^static/(.*)$ staticfiles/$1 [L]
 
-# Handle static files directly (bypass Django)
-RewriteCond %{REQUEST_URI} ^/static/
-RewriteCond %{REQUEST_FILENAME} -f
-RewriteRule ^.*$ - [L]
+# Serve media files directly (relative path)
+RewriteRule ^media/(.*)$ media/$1 [L]
 
-# Handle media files directly (bypass Django)
-RewriteCond %{REQUEST_URI} ^/media/
-RewriteCond %{REQUEST_FILENAME} -f
-RewriteRule ^.*$ - [L]
-
-# Route everything else to Django
+# Route everything else to the Python application
 RewriteCond %{REQUEST_FILENAME} !-f
 RewriteCond %{REQUEST_FILENAME} !-d
 RewriteRule ^(.*)$ passenger_wsgi.py/$1 [QSA,PT,L]
