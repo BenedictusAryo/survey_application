@@ -1,0 +1,172 @@
+{% extends 'base.html' %}
+
+{% block title %}Delete Form - {{ form.title }}{% endblock %}
+
+{% block content %}
+<div class="max-w-2xl mx-auto">
+    <!-- Header -->
+    <div class="mb-8">
+        <div class="breadcrumbs text-sm mb-2">
+            <ul>
+                <li><a href="{% url 'forms:list' %}"><i class="fas fa-home"></i> Forms</a></li>
+                <li><a href="{% url 'forms:detail' form.pk %}">{{ form.title }}</a></li>
+                <li class="text-error">Delete</li>
+            </ul>
+        </div>
+        <h1 class="text-4xl font-bold text-error mb-2">
+            <i class="fas fa-exclamation-triangle"></i>
+            Delete Form
+        </h1>
+        <p class="text-base-content/70">This action cannot be undone</p>
+    </div>
+
+    <!-- Warning Card -->
+    <div class="card bg-base-100 shadow-xl border-2 border-error">
+        <div class="card-body">
+            <div class="alert alert-error mb-6">
+                <i class="fas fa-exclamation-triangle text-2xl"></i>
+                <div>
+                    <h3 class="font-bold text-lg">Warning: Permanent Deletion</h3>
+                    <div class="text-sm">You are about to permanently delete this form and all associated data.</div>
+                </div>
+            </div>
+
+            <!-- Form Details -->
+            <div class="bg-base-200 rounded-lg p-6 mb-6">
+                <h3 class="text-xl font-semibold mb-4">Form Details</h3>
+                <div class="space-y-3">
+                    <div class="flex justify-between">
+                        <span class="font-medium">Title:</span>
+                        <span class="text-right">{{ form.title }}</span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span class="font-medium">Status:</span>
+                        <span class="badge badge-{{ form.status == 'published' and 'success' or 'warning' }}">
+                            {{ form.get_status_display }}
+                        </span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span class="font-medium">Questions:</span>
+                        <span>{{ form.questions.count }}</span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span class="font-medium">Responses:</span>
+                        <span class="{% if form.responses.count > 0 %}text-error font-bold{% endif %}">
+                            {{ form.responses.count }}
+                        </span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span class="font-medium">Created:</span>
+                        <span>{{ form.created_at|date:"M d, Y h:i A" }}</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- What will be deleted -->
+            <div class="bg-error/10 rounded-lg p-6 mb-6">
+                <h3 class="text-lg font-semibold mb-3 text-error">
+                    <i class="fas fa-trash-alt"></i>
+                    The following will be permanently deleted:
+                </h3>
+                <ul class="space-y-2 ml-6">
+                    <li class="flex items-start gap-2">
+                        <i class="fas fa-times text-error mt-1"></i>
+                        <span>The form and all its settings</span>
+                    </li>
+                    <li class="flex items-start gap-2">
+                        <i class="fas fa-times text-error mt-1"></i>
+                        <span>All {{ form.questions.count }} question(s)</span>
+                    </li>
+                    <li class="flex items-start gap-2">
+                        <i class="fas fa-times text-error mt-1"></i>
+                        <span>All {{ form.responses.count }} response(s) and submissions</span>
+                    </li>
+                    <li class="flex items-start gap-2">
+                        <i class="fas fa-times text-error mt-1"></i>
+                        <span>All sections and form structure</span>
+                    </li>
+                    <li class="flex items-start gap-2">
+                        <i class="fas fa-times text-error mt-1"></i>
+                        <span>Form images, QR codes, and related files</span>
+                    </li>
+                    <li class="flex items-start gap-2">
+                        <i class="fas fa-times text-error mt-1"></i>
+                        <span>Collaboration settings</span>
+                    </li>
+                </ul>
+            </div>
+
+            <!-- Confirmation -->
+            <form method="post" id="delete-form">
+                {% csrf_token %}
+                
+                <div class="form-control mb-6">
+                    <label class="label">
+                        <span class="label-text font-semibold">
+                            Type "<span class="text-error font-bold">DELETE</span>" to confirm:
+                        </span>
+                    </label>
+                    <input 
+                        type="text" 
+                        id="confirm-input" 
+                        class="input input-bordered input-error" 
+                        placeholder="Type DELETE to confirm"
+                        autocomplete="off"
+                    >
+                </div>
+
+                <!-- Action Buttons -->
+                <div class="flex flex-col sm:flex-row gap-3 justify-end">
+                    <a href="{% url 'forms:detail' form.pk %}" class="btn btn-ghost gap-2 order-2 sm:order-1">
+                        <i class="fas fa-arrow-left"></i>
+                        Cancel
+                    </a>
+                    <button 
+                        type="submit" 
+                        id="delete-button"
+                        class="btn btn-error gap-2 order-1 sm:order-2" 
+                        disabled
+                    >
+                        <i class="fas fa-trash-alt"></i>
+                        Delete Permanently
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+// Enable delete button only when user types "DELETE"
+const confirmInput = document.getElementById('confirm-input');
+const deleteButton = document.getElementById('delete-button');
+const deleteForm = document.getElementById('delete-form');
+
+confirmInput.addEventListener('input', function() {
+    if (this.value === 'DELETE') {
+        deleteButton.disabled = false;
+        deleteButton.classList.remove('btn-disabled');
+    } else {
+        deleteButton.disabled = true;
+        deleteButton.classList.add('btn-disabled');
+    }
+});
+
+// Prevent accidental submission
+deleteForm.addEventListener('submit', function(e) {
+    if (confirmInput.value !== 'DELETE') {
+        e.preventDefault();
+        alert('Please type DELETE to confirm deletion.');
+        return false;
+    }
+    
+    // Show loading state
+    deleteButton.disabled = true;
+    deleteButton.innerHTML = '<span class="loading loading-spinner"></span> Deleting...';
+    
+    return true;
+});
+</script>
+{% endblock %}

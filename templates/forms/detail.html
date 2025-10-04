@@ -447,8 +447,40 @@ function duplicateForm() {
 }
 
 function deleteForm() {
-    if (confirm('Are you sure you want to delete this form? This action cannot be undone.')) {
-        alert('Delete functionality will be implemented');
+    document.getElementById('delete-form-modal').classList.add('modal-open');
+}
+
+function closeDeleteModal() {
+    document.getElementById('delete-form-modal').classList.remove('modal-open');
+    document.getElementById('delete-confirm-input').value = '';
+    document.getElementById('delete-confirm-button').disabled = true;
+}
+
+function confirmDeleteForm() {
+    const confirmInput = document.getElementById('delete-confirm-input');
+    const deleteButton = document.getElementById('delete-confirm-button');
+    
+    if (confirmInput.value !== 'DELETE') {
+        alert('Please type DELETE to confirm deletion.');
+        return;
+    }
+    
+    // Show loading state
+    deleteButton.disabled = true;
+    deleteButton.innerHTML = '<span class="loading loading-spinner"></span> Deleting...';
+    
+    // Submit the form
+    document.getElementById('delete-form-form').submit();
+}
+
+function checkDeleteConfirmation() {
+    const confirmInput = document.getElementById('delete-confirm-input');
+    const deleteButton = document.getElementById('delete-confirm-button');
+    
+    if (confirmInput.value === 'DELETE') {
+        deleteButton.disabled = false;
+    } else {
+        deleteButton.disabled = true;
     }
 }
 
@@ -533,5 +565,119 @@ function closeConfigureModal() {
         <div class="loading loading-spinner loading-lg mx-auto"></div>
     </div>
     <div class="modal-backdrop" onclick="closeConfigureModal()"></div>
+</div>
+
+<!-- Delete Form Confirmation Modal -->
+<div class="modal" id="delete-form-modal">
+    <div class="modal-box max-w-2xl">
+        <h3 class="font-bold text-2xl text-error mb-4">
+            <i class="fas fa-exclamation-triangle"></i>
+            Delete Form
+        </h3>
+        
+        <div class="alert alert-error mb-4">
+            <i class="fas fa-exclamation-triangle text-xl"></i>
+            <div>
+                <h4 class="font-bold">Warning: Permanent Deletion</h4>
+                <div class="text-sm">This action cannot be undone. All data will be permanently deleted.</div>
+            </div>
+        </div>
+        
+        <!-- Form Details -->
+        <div class="bg-base-200 rounded-lg p-4 mb-4">
+            <h4 class="font-semibold mb-3">Form Details</h4>
+            <div class="space-y-2 text-sm">
+                <div class="flex justify-between">
+                    <span class="font-medium">Title:</span>
+                    <span class="text-right">{{ form.title }}</span>
+                </div>
+                <div class="flex justify-between">
+                    <span class="font-medium">Status:</span>
+                    <span class="badge badge-{{ form.status == 'published' and 'success' or 'warning' }} badge-sm">
+                        {{ form.get_status_display }}
+                    </span>
+                </div>
+                <div class="flex justify-between">
+                    <span class="font-medium">Questions:</span>
+                    <span>{{ questions.count }}</span>
+                </div>
+                <div class="flex justify-between">
+                    <span class="font-medium">Responses:</span>
+                    <span class="{% if response_count > 0 %}text-error font-bold{% endif %}">
+                        {{ response_count }}
+                    </span>
+                </div>
+            </div>
+        </div>
+        
+        <!-- What will be deleted -->
+        <div class="bg-error/10 rounded-lg p-4 mb-4">
+            <h4 class="font-semibold mb-2 text-error">
+                <i class="fas fa-trash-alt"></i>
+                The following will be permanently deleted:
+            </h4>
+            <ul class="space-y-1 ml-6 text-sm">
+                <li class="flex items-start gap-2">
+                    <i class="fas fa-times text-error text-xs mt-1"></i>
+                    <span>The form and all its settings</span>
+                </li>
+                <li class="flex items-start gap-2">
+                    <i class="fas fa-times text-error text-xs mt-1"></i>
+                    <span>All {{ questions.count }} question(s)</span>
+                </li>
+                <li class="flex items-start gap-2">
+                    <i class="fas fa-times text-error text-xs mt-1"></i>
+                    <span>All {{ response_count }} response(s) and submissions</span>
+                </li>
+                <li class="flex items-start gap-2">
+                    <i class="fas fa-times text-error text-xs mt-1"></i>
+                    <span>All sections and form structure</span>
+                </li>
+                <li class="flex items-start gap-2">
+                    <i class="fas fa-times text-error text-xs mt-1"></i>
+                    <span>Form images, QR codes, and related files</span>
+                </li>
+            </ul>
+        </div>
+        
+        <!-- Confirmation Input -->
+        <form method="post" action="{% url 'forms:delete' form.pk %}" id="delete-form-form">
+            {% csrf_token %}
+            <div class="form-control mb-4">
+                <label class="label">
+                    <span class="label-text font-semibold">
+                        Type "<span class="text-error font-bold">DELETE</span>" to confirm:
+                    </span>
+                </label>
+                <input 
+                    type="text" 
+                    id="delete-confirm-input" 
+                    class="input input-bordered input-error" 
+                    placeholder="Type DELETE to confirm"
+                    autocomplete="off"
+                    oninput="checkDeleteConfirmation()"
+                >
+            </div>
+            
+            <!-- Action Buttons -->
+            <div class="modal-action">
+                <button type="button" class="btn btn-ghost" onclick="closeDeleteModal()">
+                    <i class="fas fa-times"></i>
+                    Cancel
+                </button>
+                <button 
+                    type="button" 
+                    id="delete-confirm-button" 
+                    class="btn btn-error" 
+                    onclick="confirmDeleteForm()"
+                    disabled
+                >
+                    <i class="fas fa-trash-alt"></i>
+                    Delete Permanently
+                </button>
+            </div>
+        </form>
+    </div>
+    <div class="modal-backdrop" onclick="closeDeleteModal()"></div>
 </div>
 {% endblock %}

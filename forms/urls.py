@@ -8,6 +8,7 @@ urlpatterns = [
     path('create/', views.FormCreateView.as_view(), name='create'),
     path('<int:pk>/', views.FormDetailView.as_view(), name='detail'),
     path('<int:pk>/edit/', views.FormEditView.as_view(), name='edit'),
+    path('<int:pk>/delete/', views.FormDeleteView.as_view(), name='delete'),
     path('<int:pk>/questions/', views.FormQuestionEditView.as_view(), name='questions'),
     path('<int:pk>/questions/add/', views.FormQuestionCreateView.as_view(), name='question_add'),
     path('questions/<int:pk>/edit/', views.FormQuestionUpdateView.as_view(), name='question_edit'),

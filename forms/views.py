@@ -85,6 +85,32 @@ class FormEditView(LoginRequiredMixin, UpdateView):
     def get_success_url(self):
         return reverse_lazy('forms:detail', kwargs={'pk': self.object.pk})
 
+class FormDeleteView(LoginRequiredMixin, View):
+    """View to handle form deletion"""
+    
+    def get(self, request, pk):
+        """Display the delete confirmation page"""
+        form = get_object_or_404(Form, pk=pk, owner=request.user)
+        
+        context = {
+            'form': form,
+            'response_count': form.responses.count(),
+            'questions': form.questions.all(),
+        }
+        
+        return render(request, 'forms/delete_confirm.html', context)
+    
+    def post(self, request, pk):
+        """Handle form deletion"""
+        form = get_object_or_404(Form, pk=pk, owner=request.user)
+        form_title = form.title
+        
+        # Delete the form (cascade will handle related objects)
+        form.delete()
+        
+        messages.success(request, f'Form "{form_title}" has been deleted successfully.')
+        return redirect('forms:list')
+
 class FormQuestionEditView(LoginRequiredMixin, DetailView):
     model = Form
     template_name = 'forms/questions.html'
