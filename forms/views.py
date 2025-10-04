@@ -463,11 +463,39 @@ def export_responses_excel(request, pk):
 
         data_rows.append(row)
 
-    # Create DataFrame
-    import pandas as pd
+    # Create Excel workbook using openpyxl directly
     from datetime import datetime
-    df = pd.DataFrame(data_rows, columns=headers)
-
+    from openpyxl import Workbook
+    from openpyxl.utils import get_column_letter
+    
+    wb = Workbook()
+    ws = wb.active
+    ws.title = 'Responses'
+    
+    # Write headers
+    ws.append(headers)
+    
+    # Write data rows
+    for row in data_rows:
+        ws.append(row)
+    
+    # Auto-adjust column widths
+    for idx, col in enumerate(headers, start=1):
+        # Calculate max length in column
+        max_length = len(str(col))  # Start with header length
+        if data_rows:
+            for row in data_rows:
+                try:
+                    cell_value = str(row[idx-1]) if idx-1 < len(row) else ''
+                    max_length = max(max_length, len(cell_value))
+                except (IndexError, TypeError):
+                    pass
+        
+        # Add some padding and cap at 50
+        adjusted_width = min(max_length + 2, 50)
+        column_letter = get_column_letter(idx)
+        ws.column_dimensions[column_letter].width = adjusted_width
+    
     # Generate Excel file with date
     current_date = datetime.now().strftime('%Y-%m-%d')
     filename = f"{form_obj.slug or slugify(form_obj.title)}-responses-{current_date}.xlsx"
@@ -475,25 +503,10 @@ def export_responses_excel(request, pk):
         content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
     )
     response['Content-Disposition'] = f'attachment; filename="{filename}"'
-
-    # Write to Excel with auto-column width
-    with pd.ExcelWriter(response, engine='openpyxl') as writer:
-        df.to_excel(writer, index=False, sheet_name='Responses')
-        
-        # Auto-adjust column widths
-        worksheet = writer.sheets['Responses']
-        from openpyxl.utils import get_column_letter
-        
-        for idx, col in enumerate(df.columns, start=1):
-            max_length = max(
-                df[col].astype(str).apply(len).max() if len(df) > 0 else 0,
-                len(str(col))
-            )
-            # Add some padding and cap at 50
-            adjusted_width = min(max_length + 2, 50)
-            column_letter = get_column_letter(idx)
-            worksheet.column_dimensions[column_letter].width = adjusted_width
-
+    
+    # Save workbook to response
+    wb.save(response)
+    
     return response
 
 class FormQRCodeView(DetailView):

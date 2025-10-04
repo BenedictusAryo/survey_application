@@ -5,8 +5,9 @@ from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib import messages
 from django.urls import reverse_lazy
 from django.http import HttpResponse
-import pandas as pd
 import csv
+from io import TextIOWrapper
+from openpyxl import load_workbook
 from .models import MasterDataSet, MasterDataColumn, MasterDataRecord
 
 class MasterDataListView(LoginRequiredMixin, ListView):
@@ -84,19 +85,57 @@ class MasterDataImportView(LoginRequiredMixin, DetailView):
         try:
             # Read file based on extension
             if file.name.endswith('.csv'):
-                df = pd.read_csv(file, header=0 if has_header else None)
+                # Read CSV using standard library
+                text_file = TextIOWrapper(file.file, encoding='utf-8-sig')
+                reader = csv.reader(text_file)
+                
+                if has_header:
+                    file_columns = [str(col) for col in next(reader)]
+                    data_rows = list(reader)
+                else:
+                    data_rows = list(reader)
+                    if data_rows:
+                        file_columns = [f'Column_{i+1}' for i in range(len(data_rows[0]))]
+                    else:
+                        file_columns = []
+                
+                # Convert to list of dicts
+                preview_data = [
+                    {file_columns[i]: str(val) if val else '' for i, val in enumerate(row)}
+                    for row in data_rows if row  # Skip empty rows
+                ]
+                
             elif file.name.endswith(('.xlsx', '.xls')):
-                df = pd.read_excel(file, header=0 if has_header else None)
+                # Read Excel using openpyxl
+                wb = load_workbook(file, read_only=True, data_only=True)
+                ws = wb.active
+                
+                # Read all rows
+                rows = list(ws.iter_rows(values_only=True))
+                
+                if has_header and rows:
+                    file_columns = [str(cell) if cell is not None else f'Column_{i+1}' 
+                                   for i, cell in enumerate(rows[0])]
+                    data_rows = rows[1:]
+                else:
+                    data_rows = rows
+                    if data_rows:
+                        file_columns = [f'Column_{i+1}' for i in range(len(data_rows[0]))]
+                    else:
+                        file_columns = []
+                
+                # Convert to list of dicts
+                preview_data = [
+                    {file_columns[i]: str(val) if val is not None else '' 
+                     for i, val in enumerate(row) if i < len(file_columns)}
+                    for row in data_rows if row  # Skip empty rows
+                ]
+                
+                wb.close()
+                
             else:
                 messages.error(request, 'Unsupported file format. Please use CSV or Excel files.')
                 return self.get(request, *args, **kwargs)
-            
-            # Convert all data to strings to ensure JSON serializability
-            df = df.astype(str)
-            
-            # Convert to list of dicts for preview
-            preview_data = df.fillna('').to_dict('records')
-            file_columns = list(df.columns)
             
             # Store in session for confirmation step
             request.session['import_preview'] = {
@@ -107,6 +146,7 @@ class MasterDataImportView(LoginRequiredMixin, DetailView):
             
             context = self.get_context_data()
             context['preview_data'] = preview_data[:50]  # Limit preview
+            context['total_records'] = len(preview_data)  # Total count for import button
             context['file_columns'] = file_columns
             
             return self.render_to_response(context)

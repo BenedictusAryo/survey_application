@@ -9,7 +9,6 @@ dependencies = [
     "django-ratelimit>=4.1.0",
     "django-simple-captcha>=0.6.2",
     "openpyxl>=3.1.5",
-    "pandas>=2.3.3",
     "pillow>=11.3.0",
     "python-decouple>=3.8",
     "qrcode[pil]>=8.2",

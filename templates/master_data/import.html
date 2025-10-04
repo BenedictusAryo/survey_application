@@ -102,7 +102,7 @@ Jakarta Barat,B2,Jane Smith,Jl. Sample 456,0987654321,70</code></pre>
             <div class="flex justify-between items-center mb-4">
                 <h2 class="card-title">Preview & Column Mapping</h2>
                 <div class="text-sm text-gray-600">
-                    {{ preview_data|length }} rows found
+                    {{ total_records }} rows found (showing first {{ preview_data|length }})
                 </div>
             </div>
             
@@ -131,7 +131,7 @@ Jakarta Barat,B2,Jane Smith,Jl. Sample 456,0987654321,70</code></pre>
                     </div>
                     
                     <div class="flex gap-2">
-                        <button type="submit" class="btn btn-success">Import {{ preview_data|length }} Records</button>
+                        <button type="submit" class="btn btn-success">Import {{ total_records }} Records</button>
                         <a href="{% url 'master_data:import' dataset.pk %}" class="btn btn-outline">Cancel</a>
                     </div>
                 </form>
