@@ -593,7 +593,7 @@ function closeConfigureModal() {
                 </div>
                 <div class="flex justify-between">
                     <span class="font-medium">Status:</span>
-                    <span class="badge badge-{{ form.status == 'published' and 'success' or 'warning' }} badge-sm">
+                    <span class="badge {% if form.status == 'published' %}badge-success{% else %}badge-warning{% endif %} badge-sm">
                         {{ form.get_status_display }}
                     </span>
                 </div>
