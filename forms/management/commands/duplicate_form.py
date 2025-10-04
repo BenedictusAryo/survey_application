@@ -77,11 +77,17 @@ class Command(BaseCommand):
         if not new_title:
             new_title = f"Copy of {original_form.title}"
         
+        # Generate a unique slug that fits within 50 characters
+        # Reserve 9 characters for the UUID part ("-" + 8 chars)
+        base_slug = slugify(new_title)[:41]  # Max 41 chars for base
+        unique_suffix = str(uuid.uuid4())[:8]
+        new_slug = f"{base_slug}-{unique_suffix}"
+        
         # Create a new form (duplicate)
         new_form = Form.objects.create(
             title=new_title,
             description=original_form.description,
-            slug=slugify(new_title) + '-' + str(uuid.uuid4())[:8],
+            slug=new_slug,
             owner=original_form.owner,
             status='draft',  # Always start as draft
             password=original_form.password,

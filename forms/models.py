@@ -52,7 +52,11 @@ class Form(models.Model):
     
     def save(self, *args, **kwargs):
         if not self.slug:
-            self.slug = slugify(self.title) + '-' + str(uuid.uuid4())[:8]
+            # Generate a unique slug that fits within 50 characters
+            # Reserve 9 characters for the UUID part ("-" + 8 chars)
+            base_slug = slugify(self.title)[:41]  # Max 41 chars for base
+            unique_suffix = str(uuid.uuid4())[:8]
+            self.slug = f"{base_slug}-{unique_suffix}"
         super().save(*args, **kwargs)
         
         # Generate QR code if published and doesn't have one
