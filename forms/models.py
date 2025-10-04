@@ -61,9 +61,14 @@ class Form(models.Model):
     
     def generate_qr_code(self):
         """Generate QR code for the form URL"""
+        from django.conf import settings
+        from django.urls import reverse
+        
         qr = qrcode.QRCode(version=1, box_size=10, border=5)
-        # Use localhost for development, production domain for production
-        form_url = f"http://localhost:8000/survey/{self.slug}/"
+        # Get the site URL from settings
+        site_url = getattr(settings, 'SITE_URL', 'http://localhost:8000')
+        survey_path = reverse('responses:public_survey', kwargs={'slug': self.slug})
+        form_url = f"{site_url}{survey_path}"
         qr.add_data(form_url)
         qr.make(fit=True)
         

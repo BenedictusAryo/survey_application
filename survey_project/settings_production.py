@@ -25,6 +25,9 @@ DEBUG = config('DEBUG', default=False, cast=bool)
 # Add your domain here
 ALLOWED_HOSTS = config('ALLOWED_HOSTS', default='localhost,127.0.0.1', cast=lambda v: [s.strip() for s in v.split(',') if s.strip()])
 
+# Site URL for generating absolute URLs (e.g., in emails, QR codes)
+SITE_URL = config('SITE_URL', default='http://localhost:8000')
+
 
 # Application definition
 INSTALLED_APPS = [

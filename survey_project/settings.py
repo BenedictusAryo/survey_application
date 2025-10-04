@@ -28,6 +28,9 @@ DEBUG = config('DEBUG', default=True, cast=bool)
 
 ALLOWED_HOSTS = config('ALLOWED_HOSTS', default='', cast=lambda v: [s.strip() for s in v.split(',') if s.strip()])
 
+# Site URL for generating absolute URLs (e.g., in emails, QR codes)
+SITE_URL = config('SITE_URL', default='http://localhost:8000')
+
 
 # Application definition
 

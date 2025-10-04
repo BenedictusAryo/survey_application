@@ -317,6 +317,8 @@ class FormPublishView(LoginRequiredMixin, View):
             return self._unpublish_form(request, form)
         elif action == 'update_settings':
             return self._update_settings(request, form)
+        elif action == 'regenerate_qr':
+            return self._regenerate_qr(request, form)
             
         messages.error(request, 'Invalid action.')
         return redirect('forms:publish', pk=pk)
@@ -370,10 +372,26 @@ class FormPublishView(LoginRequiredMixin, View):
         messages.success(request, 'Form settings updated successfully!')
         return redirect('forms:publish', pk=form.pk)
     
+    def _regenerate_qr(self, request, form):
+        """Regenerate QR code for the form"""
+        if form.status != 'published':
+            messages.error(request, 'Can only regenerate QR code for published forms.')
+            return redirect('forms:publish', pk=form.pk)
+        
+        # Delete old QR code and regenerate
+        if form.qr_code:
+            form.qr_code.delete(save=False)
+        form.generate_qr_code()
+        
+        messages.success(request, 'QR code has been regenerated successfully!')
+        return redirect('forms:publish', pk=form.pk)
+    
     def _get_public_url(self, form):
         """Get the public URL for the form"""
-        # In production, you would use request.build_absolute_uri()
-        return f"http://localhost:8000/survey/{form.slug}/"
+        from django.urls import reverse
+        # Build the absolute URL using the request object
+        survey_path = reverse('responses:public_survey', kwargs={'slug': form.slug})
+        return self.request.build_absolute_uri(survey_path)
 
 class FormResponsesView(LoginRequiredMixin, DetailView):
     model = Form
