@@ -570,7 +570,13 @@ class FormQRCodeView(DetailView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         form_obj = self.object
-        context['public_url'] = f"http://localhost:8000/survey/{form_obj.slug}/"
+        
+        # Get the public URL using settings.SITE_URL
+        from django.urls import reverse
+        from django.conf import settings
+        survey_path = reverse('responses:public_survey', kwargs={'slug': form_obj.slug})
+        context['public_url'] = f"{settings.SITE_URL}{survey_path}"
+        
         return context
 
 
