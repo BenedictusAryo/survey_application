@@ -90,7 +90,8 @@ if DATABASE_ENGINE == 'django.db.backends.mysql':
             'HOST': config('DATABASE_HOST', default='localhost'),
             'PORT': config('DATABASE_PORT', default='3306'),
             'OPTIONS': {
-                'init_command': "SET sql_mode='STRICT_TRANS_TABLES'",
+                'charset': 'utf8mb4',
+                'init_command': "SET sql_mode='STRICT_TRANS_TABLES', innodb_strict_mode=1",
             },
         }
     }
