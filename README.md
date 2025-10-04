@@ -198,32 +198,99 @@ When you need to update the database schema after code changes:
    touch tmp/restart.txt
    ```
 
+### Production Deployment
+
+#### Quick Deployment
+
+For convenience, use the automated deployment script:
+
+```bash
+cd /home/parh4868/public_html/survey.parokibintaro.org
+bash deploy_production.sh
+```
+
+This script automatically:
+1. ✅ Builds Tailwind CSS (`npm run build`)
+2. ✅ Collects static files
+3. ✅ Runs database migrations
+4. ✅ Sets proper permissions
+5. ✅ Restarts the application
+6. ✅ Tests the deployment
+
+#### Manual Deployment Steps
+
+If you need to deploy manually:
+
+```bash
+# 1. Activate virtual environment
+source ~/virtualenv/public_html/survey.parokibintaro.org/3.11/bin/activate
+cd /home/parh4868/public_html/survey.parokibintaro.org
+
+# 2. Build Tailwind CSS (IMPORTANT!)
+npm run build
+
+# 3. Collect static files
+python manage.py collectstatic --noinput --settings=survey_project.settings_production
+
+# 4. Run migrations
+python manage.py migrate --settings=survey_project.settings_production
+
+# 5. Restart application
+touch passenger_wsgi.py
+```
+
+**⚠️ Important:** Always run `npm run build` before collecting static files. This command:
+- Generates `static/css/output.css` from Tailwind CSS
+- Automatically copies it to `staticfiles/css/output.css`
+- Ensures proper styling in production
+
 ### Common Production Commands
 
 All commands should use the production settings and be run with the virtual environment activated:
 
 ```bash
 # Activate virtual environment first
-source /home/username/virtualenv/survey_application/3.9/bin/activate
-cd /home/username/survey_application
+source ~/virtualenv/public_html/survey.parokibintaro.org/3.11/bin/activate
+cd /home/parh4868/public_html/survey.parokibintaro.org
+
+# Build Tailwind CSS
+npm run build
+
+# Collect static files
+python manage.py collectstatic --noinput --settings=survey_project.settings_production
 
 # Check for migration issues
 python manage.py showmigrations --settings=survey_project.settings_production
 
+# Run migrations
+python manage.py migrate --settings=survey_project.settings_production
+
 # Create superuser
 python manage.py createsuperuser --settings=survey_project.settings_production
-
-# Collect static files
-python manage.py collectstatic --noinput --settings=survey_project.settings_production
 
 # Django shell
 python manage.py shell --settings=survey_project.settings_production
 
 # Check deployment settings
 python manage.py check --deploy --settings=survey_project.settings_production
+
+# Restart application
+touch passenger_wsgi.py
 ```
 
 ### Troubleshooting
+
+**Site has no styling / CSS not loading:**
+```bash
+# Most common issue - output.css not built
+cd /home/parh4868/public_html/survey.parokibintaro.org
+npm run build                    # Build Tailwind CSS
+python manage.py collectstatic --noinput --settings=survey_project.settings_production
+touch passenger_wsgi.py          # Restart app
+```
+- Verify `static/css/output.css` exists after `npm run build`
+- Check `staticfiles/css/output.css` exists after `collectstatic`
+- Test: `curl -I https://survey.parokibintaro.org/static/css/output.css` (should return HTTP 200)
 
 **Database connection issues:**
 - Verify `.env` file exists and has correct database credentials
@@ -235,10 +302,15 @@ python manage.py check --deploy --settings=survey_project.settings_production
 - Ensure `__init__.py` exists in migrations folders
 - Review migration dependencies for conflicts
 
-**Static files not loading:**
-- Run `collectstatic` command
-- Verify static files path in cPanel configuration
-- Check file permissions (644 for files, 755 for directories)
+**Static files return 404:**
+- Verify `.htaccess` file contains static file rewrite rules
+- Check file permissions: `chmod 755 staticfiles && find staticfiles -type f -exec chmod 644 {} \;`
+- Ensure application is in `/home/parh4868/public_html/survey.parokibintaro.org`
+
+**Application won't start:**
+- Check passenger_wsgi.py exists and is executable
+- Verify Python path in `.htaccess` matches: `~/virtualenv/public_html/survey.parokibintaro.org/3.11/bin/python`
+- View logs: `tail -f logs/django.log` and `tail -f passenger_wsgi.log`
 
 ## Usage Guide
 
@@ -289,18 +361,63 @@ python manage.py check --deploy --settings=survey_project.settings_production
 
 ```
 survey_application/
-├── accounts/           # User authentication and profiles
-├── forms/             # Form creation and management
-├── master_data/       # Master data sets
-├── responses/         # Survey responses
-├── templates/         # HTML templates
-├── media/            # User-uploaded files
-├── static/           # Static assets (CSS, JS, images)
-├── survey_project/   # Django project settings
-├── manage.py
-├── requirements.txt
-└── README.md
+├── .htaccess                    # Apache/Passenger configuration (production)
+├── passenger_wsgi.py            # WSGI application entry point
+├── manage.py                    # Django management script
+├── .env                         # Environment variables (create from prod.env)
+├── prod.env                     # Environment variables template
+├── requirements.txt             # Python dependencies
+├── package.json                 # Node.js dependencies (Tailwind CSS)
+├── tailwind.config.js           # Tailwind CSS configuration
+├── deploy_production.sh         # Automated deployment script
+│
+├── accounts/                    # User authentication and profiles
+├── forms/                       # Form creation and management
+├── master_data/                 # Master data sets
+├── responses/                   # Survey responses
+├── survey_project/              # Django project settings
+│   ├── settings.py             # Development settings
+│   └── settings_production.py  # Production settings
+│
+├── templates/                   # HTML templates
+│   ├── base.html
+│   ├── accounts/
+│   ├── forms/
+│   ├── master_data/
+│   └── responses/
+│
+├── static/                      # Source static files (NOT served directly)
+│   ├── css/
+│   │   ├── input.css           # Tailwind input file
+│   │   └── output.css          # Generated by 'npm run build'
+│   └── images/
+│
+├── staticfiles/                 # Collected static files (served in production)
+│   ├── css/
+│   │   └── output.css          # Copied by collectstatic
+│   ├── admin/                  # Django admin static files
+│   └── images/
+│
+├── media/                       # User-uploaded files
+│   ├── qr_codes/
+│   └── section_images/
+│
+└── logs/                        # Application logs
+    ├── django.log
+    └── error.log
 ```
+
+**Important Directories:**
+- `static/` - Source files, not served directly. Contains input.css for Tailwind.
+- `staticfiles/` - Production static files, served by Apache. Created by `collectstatic`.
+- `media/` - User uploads, served directly.
+- `logs/` - Application logs for debugging.
+
+**Key Files:**
+- `.htaccess` - Configures Apache to serve static files and route requests to Django
+- `passenger_wsgi.py` - WSGI entry point for Passenger/Apache
+- `.env` - Environment-specific configuration (database, email, secrets)
+- `deploy_production.sh` - One-command deployment automation
 
 ## API Endpoints
 

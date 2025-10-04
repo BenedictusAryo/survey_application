@@ -4,7 +4,8 @@
   "description": "Django Survey Application with Tailwind CSS and DaisyUI",
   "scripts": {
     "watch": "tailwindcss -i ./static/css/input.css -o ./static/css/output.css --watch",
-    "build": "tailwindcss -i ./static/css/input.css -o ./static/css/output.css --minify"
+    "build": "tailwindcss -i ./static/css/input.css -o ./static/css/output.css --minify && npm run copy",
+    "copy": "mkdir -p staticfiles/css && cp static/css/output.css staticfiles/css/output.css"
   },
   "keywords": [],
   "author": "",
