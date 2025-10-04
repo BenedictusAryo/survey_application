@@ -104,7 +104,7 @@ This application enables administrators and form creators to define demographic 
 
 This application is designed to be deployed as a subdomain (e.g., `survey.parokibintaro.org`) using cPanel's Python Application feature.
 
-### Deployment Steps
+### Initial Deployment Steps
 
 1. **Access cPanel** and navigate to "Setup Python App"
 
@@ -114,27 +114,131 @@ This application is designed to be deployed as a subdomain (e.g., `survey.paroki
    - Application URL: Your subdomain (e.g., `survey.parokibintaro.org`)
    - Application startup file: `passenger_wsgi.py`
 
-3. **Configure the application**:
+3. **Create `.env` file** in the project root:
    ```bash
    cd /home/username/survey_application
+   nano .env
+   ```
+   
+   Add the following configuration:
+   ```env
+   # Django Settings
+   DEBUG=False
+   SECRET_KEY=your-randomly-generated-secret-key-here
+   ALLOWED_HOSTS=survey.parokibintaro.org,www.survey.parokibintaro.org
+   
+   # Database Configuration (MySQL)
+   DATABASE_ENGINE=django.db.backends.mysql
+   DATABASE_NAME=your_database_name
+   DATABASE_USER=your_database_user
+   DATABASE_PASSWORD=your_database_password
+   DATABASE_HOST=localhost
+   DATABASE_PORT=3306
+   
+   # Or use SQLite (simpler, for smaller deployments)
+   # DATABASE_ENGINE=django.db.backends.sqlite3
+   ```
+
+4. **Install dependencies**:
+   ```bash
    source /home/username/virtualenv/survey_application/3.9/bin/activate
    pip install -r requirements.txt
    ```
 
-4. **Set up the database**:
+5. **Set up the database**:
+   
+   **For MySQL:**
    - Create a MySQL database in cPanel
-   - Update `settings.py` with database credentials
-   - Run migrations:
-     ```bash
-     python manage.py migrate
-     python manage.py collectstatic --noinput
-     ```
+   - Create a database user and assign privileges
+   - Update the `.env` file with your database credentials
+   
+   **Run migrations:**
+   ```bash
+   cd /home/username/survey_application
+   source /home/username/virtualenv/survey_application/3.9/bin/activate
+   python manage.py migrate --settings=survey_project.settings_production
+   python manage.py createsuperuser --settings=survey_project.settings_production
+   python manage.py collectstatic --noinput --settings=survey_project.settings_production
+   ```
 
-5. **Configure static files**:
+6. **Configure static files**:
    - Set static files directory in cPanel to `/home/username/survey_application/static`
    - Set static files URL to `/static`
 
-6. **Restart the application** in cPanel Python App manager
+7. **Restart the application** in cPanel Python App manager
+
+### Production Migrations
+
+When you need to update the database schema after code changes:
+
+1. **Connect to your server via SSH** or use cPanel Terminal
+
+2. **Navigate to project directory**:
+   ```bash
+   cd /home/username/survey_application
+   ```
+
+3. **Activate virtual environment**:
+   ```bash
+   source /home/username/virtualenv/survey_application/3.9/bin/activate
+   ```
+
+4. **Create new migrations** (if you've changed models):
+   ```bash
+   python manage.py makemigrations --settings=survey_project.settings_production
+   ```
+
+5. **Apply migrations**:
+   ```bash
+   python manage.py migrate --settings=survey_project.settings_production
+   ```
+
+6. **Restart the application** in cPanel Python App manager or touch the restart file:
+   ```bash
+   touch tmp/restart.txt
+   ```
+
+### Common Production Commands
+
+All commands should use the production settings and be run with the virtual environment activated:
+
+```bash
+# Activate virtual environment first
+source /home/username/virtualenv/survey_application/3.9/bin/activate
+cd /home/username/survey_application
+
+# Check for migration issues
+python manage.py showmigrations --settings=survey_project.settings_production
+
+# Create superuser
+python manage.py createsuperuser --settings=survey_project.settings_production
+
+# Collect static files
+python manage.py collectstatic --noinput --settings=survey_project.settings_production
+
+# Django shell
+python manage.py shell --settings=survey_project.settings_production
+
+# Check deployment settings
+python manage.py check --deploy --settings=survey_project.settings_production
+```
+
+### Troubleshooting
+
+**Database connection issues:**
+- Verify `.env` file exists and has correct database credentials
+- Check MySQL user has proper privileges
+- Test database connection from cPanel phpMyAdmin
+
+**Migration errors:**
+- Check if migrations folder exists in each app (accounts, forms, master_data, responses)
+- Ensure `__init__.py` exists in migrations folders
+- Review migration dependencies for conflicts
+
+**Static files not loading:**
+- Run `collectstatic` command
+- Verify static files path in cPanel configuration
+- Check file permissions (644 for files, 755 for directories)
 
 ## Usage Guide
 

@@ -72,8 +72,8 @@ class SurveyResponseForm(forms.Form):
                         widget=forms.CheckboxSelectMultiple(attrs={'class': 'checkbox'})
                     )
 
-@method_decorator(ratelimit(key='ip', rate='10/m', method='GET'), name='get')
-@method_decorator(ratelimit(key='ip', rate='5/m', method='POST'), name='post')
+@method_decorator(ratelimit(key='ip', rate='20/s', method='GET'), name='get')
+@method_decorator(ratelimit(key='ip', rate='20/s', method='POST'), name='post')
 class PublicSurveyView(FormView):
     template_name = 'responses/public_survey.html'
     form_class = SurveyResponseForm
