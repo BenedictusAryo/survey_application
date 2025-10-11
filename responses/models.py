@@ -48,6 +48,30 @@ class Response(models.Model):
     class Meta:
         ordering = ['-submitted_at']
     
+    def get_respondent_display(self):
+        """Get the display value for the respondent based on configured display column"""
+        if self.user:
+            return self.user.username
+        elif self.record:
+            # Get the FormMasterDataAttachment for this response's record
+            try:
+                attachment = self.form.master_data_attachments.get(dataset=self.record.dataset)
+                return attachment.get_record_display_value(self.record)
+            except Exception:
+                # Fallback to record's __str__ method
+                return str(self.record)
+        elif self.is_new_identity and self.new_identity_data:
+            # For new identities, try to get the display column from the dataset attachment
+            try:
+                attachment = self.form.master_data_attachments.get(dataset_id=self.new_identity_dataset_id)
+                if attachment.display_column and attachment.display_column in self.new_identity_data:
+                    return self.new_identity_data[attachment.display_column]
+            except Exception:
+                pass
+            # Fallback: return all values
+            return ', '.join(str(v) for v in self.new_identity_data.values() if v)
+        return "Anonymous"
+    
     def __str__(self):
         identifier = ""
         if self.record:

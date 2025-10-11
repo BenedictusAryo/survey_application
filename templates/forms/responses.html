@@ -108,13 +108,11 @@
                                         <span class="text-sm">{{ response.user.username }}</span>
                                     </div>
                                 {% elif response.record %}
-                                    <span class="text-sm">{{ response.record }}</span>
+                                    <span class="text-sm">{{ response.get_respondent_display }}</span>
                                 {% elif response.is_new_identity and response.new_identity_data %}
                                     <div class="text-sm">
                                         <span class="text-orange-600 font-medium">New:</span>
-                                        {% for key, value in response.new_identity_data.items %}
-                                            {{ value }}{% if not forloop.last %}, {% endif %}
-                                        {% endfor %}
+                                        {{ response.get_respondent_display }}
                                     </div>
                                 {% else %}
                                     <span class="text-sm text-gray-500">Anonymous</span>
