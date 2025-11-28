@@ -1,48 +1,49 @@
-#!/usr/bin/env python3.9
+#!/usr/bin/env python3.11
 """
 WSGI config for survey_project for cPanel deployment.
-
-This file is used by Passenger (commonly used in cPanel Python hosting).
-It exposes the WSGI callable as a module-level variable named ``application``.
-
-For more information on this file, see
-https://docs.djangoproject.com/en/5.1/howto/deployment/wsgi/
 """
 
 import sys
-import logging
+import os
 from pathlib import Path
-from django.core.wsgi import get_wsgi_application
 
-# Setup logging for debugging
-logging.basicConfig(
-    level=logging.DEBUG,
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
-    handlers=[
-        logging.FileHandler('passenger_wsgi.log'),
-        logging.StreamHandler()
-    ]
-)
-logger = logging.getLogger(__name__)
+# Setup stderr logging
+sys.stderr = sys.stdout
 
 try:
     # Add the project directory to the sys.path
     project_home = str(Path(__file__).resolve().parent)
     if project_home not in sys.path:
         sys.path.insert(0, project_home)
-    
-    logger.info(f"Project home: {project_home}")
-    logger.info(f"Python path: {sys.path}")
+
+    print(f"[WSGI] Project home: {project_home}", flush=True)
     
     # Set the Django settings module for production
-    import os
     os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'survey_project.settings_production')
-    logger.info(f"Django settings module: {os.environ.get('DJANGO_SETTINGS_MODULE')}")
+    print(f"[WSGI] Django settings: {os.environ.get('DJANGO_SETTINGS_MODULE')}", flush=True)
+
+    # Import Django
+    from django.core.wsgi import get_wsgi_application
+    print("[WSGI] Loading WSGI application...", flush=True)
     
-    # Get the WSGI application
     application = get_wsgi_application()
-    logger.info("WSGI application loaded successfully")
-    
+    print("[WSGI] ✓ WSGI application loaded successfully", flush=True)
+
 except Exception as e:
-    logger.error(f"Error loading WSGI application: {e}", exc_info=True)
-    raise
+    print(f"[WSGI] FATAL ERROR: {e}", flush=True)
+    import traceback
+    traceback.print_exc()
+    
+    # Create error handler
+    def application(environ, start_response):
+        import traceback as tb
+        error_text = f"WSGI Error:\n{tb.format_exc()}"
+        print(error_text, flush=True)
+        output = error_text.encode('utf-8')
+        status = '500 Internal Server Error'
+        response_headers = [
+            ('Content-type', 'text/plain; charset=utf-8'),
+            ('Content-Length', str(len(output)))
+        ]
+        start_response(status, response_headers)
+        return [output]

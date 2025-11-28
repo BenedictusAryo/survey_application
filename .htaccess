@@ -2,55 +2,12 @@
 PassengerAppRoot "/home/parh4868/public_html/survey.parokibintaro.org"
 PassengerBaseURI "/"
 PassengerPython "/home/parh4868/virtualenv/public_html/survey.parokibintaro.org/3.11/bin/python"
+PassengerStartupFile passenger_wsgi.py
 # DO NOT REMOVE. CLOUDLINUX PASSENGER CONFIGURATION END
 
-# DO NOT REMOVE OR MODIFY. CLOUDLINUX ENV VARS CONFIGURATION BEGIN
-<IfModule Litespeed>
-</IfModule>
-# DO NOT REMOVE OR MODIFY. CLOUDLINUX ENV VARS CONFIGURATION END
-
-# Static and Media Files Configuration
+# Serve static files directly
+<IfModule mod_rewrite.c>
 RewriteEngine On
-
-# Serve static files directly (relative path since app is in same directory)
 RewriteRule ^static/(.*)$ staticfiles/$1 [L]
-
-# Serve media files directly (relative path)
 RewriteRule ^media/(.*)$ media/$1 [L]
-
-# Route everything else to the Python application
-RewriteCond %{REQUEST_FILENAME} !-f
-RewriteCond %{REQUEST_FILENAME} !-d
-RewriteRule ^(.*)$ passenger_wsgi.py/$1 [QSA,PT,L]
-
-# Security headers
-Header always set X-Content-Type-Options nosniff
-Header always set X-Frame-Options SAMEORIGIN
-Header always set X-XSS-Protection "1; mode=block"
-Header always set Strict-Transport-Security "max-age=63072000; includeSubDomains; preload"
-Header always set Referrer-Policy "strict-origin-when-cross-origin"
-
-# Static files caching
-<IfModule mod_expires.c>
-    ExpiresActive On
-    ExpiresByType text/css "access plus 1 month"
-    ExpiresByType application/javascript "access plus 1 month"
-    ExpiresByType image/png "access plus 1 month"
-    ExpiresByType image/jpg "access plus 1 month"
-    ExpiresByType image/jpeg "access plus 1 month"
-    ExpiresByType image/gif "access plus 1 month"
-    ExpiresByType image/svg+xml "access plus 1 month"
-</IfModule>
-
-# Compress static files
-<IfModule mod_deflate.c>
-    AddOutputFilterByType DEFLATE text/plain
-    AddOutputFilterByType DEFLATE text/html
-    AddOutputFilterByType DEFLATE text/xml
-    AddOutputFilterByType DEFLATE text/css
-    AddOutputFilterByType DEFLATE application/xml
-    AddOutputFilterByType DEFLATE application/xhtml+xml
-    AddOutputFilterByType DEFLATE application/rss+xml
-    AddOutputFilterByType DEFLATE application/javascript
-    AddOutputFilterByType DEFLATE application/x-javascript
 </IfModule>
