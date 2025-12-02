@@ -7,7 +7,6 @@ from django.urls import reverse_lazy
 from django.http import HttpResponse
 import csv
 from io import TextIOWrapper
-from openpyxl import load_workbook
 from .models import MasterDataSet, MasterDataColumn, MasterDataRecord
 
 class MasterDataListView(LoginRequiredMixin, ListView):
@@ -107,6 +106,7 @@ class MasterDataImportView(LoginRequiredMixin, DetailView):
                 
             elif file.name.endswith(('.xlsx', '.xls')):
                 # Read Excel using openpyxl
+                from openpyxl import load_workbook
                 wb = load_workbook(file, read_only=True, data_only=True)
                 ws = wb.active
                 
