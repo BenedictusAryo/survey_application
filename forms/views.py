@@ -439,7 +439,13 @@ class FormResponsesView(LoginRequiredMixin, DetailView):
 
 
 def export_responses_excel(request, pk):
-    """Export form responses as Excel, joining any attached master data sets."""
+    """Stream form responses as CSV to avoid large memory usage on shared hosting.
+
+    This function replaces the previous in-memory Excel generation. It streams
+    CSV rows using Django's `StreamingHttpResponse`, which keeps memory usage
+    low even for large response sets. The exported filename is `.csv` for
+    compatibility with Excel and other spreadsheet programs.
+    """
     # Permission: only owner or editors can export
     form_obj = Form.objects.filter(
         pk=pk
@@ -450,7 +456,7 @@ def export_responses_excel(request, pk):
     if not form_obj:
         return HttpResponse('Not found or permission denied', status=403)
 
-    # Base response columns (removed: response_id, user, record_id, ip_address, user_agent, updated_at)
+    # Base response columns
     base_headers = [
         'submitted_at', 'is_complete',
         'record_display', 'is_new_identity'
@@ -472,105 +478,83 @@ def export_responses_excel(request, pk):
     # Build full header row
     headers = base_headers + [h for (_, _, h) in md_columns] + question_headers
 
-    # Fetch all responses
+    # Prepare queryset with prefetched relations; use iterator() for low memory
     responses_qs = form_obj.responses.select_related('user', 'record').prefetch_related('answers')
 
-    # Build data rows
-    data_rows = []
-    for resp in responses_qs.all():
-        row = []
-        row.append(resp.submitted_at.strftime('%Y-%m-%d %H:%M:%S') if resp.submitted_at else '')
-        row.append('Yes' if resp.is_complete else 'No')
-        
-        # For record display, try attachments' display_column if available
-        record_display = ''
-        if resp.record:
-            # If the response's record matches any attachment dataset, get display value
-            for attach in md_attachments:
-                if resp.record.dataset_id == attach.dataset_id:
-                    record_display = attach.get_record_display_value(resp.record)
-                    break
-            if not record_display:
-                # fallback to record __str__
-                record_display = str(resp.record)
-
-        row.append(record_display)
-        row.append('Yes (Pending Approval)' if (resp.is_new_identity and not resp.record) else ('Yes (Approved)' if (resp.is_new_identity and resp.record) else 'No'))
-
-        # Master data columns values
-        for attach, col, header in md_columns:
-            value = ''
-            # Check if this response has a linked record
-            if resp.record and resp.record.dataset_id == attach.dataset_id:
-                try:
-                    value = resp.record.data.get(col.name, '')
-                except Exception:
-                    value = ''
-            # Check if this response has new identity data for this dataset
-            elif resp.is_new_identity and resp.new_identity_dataset_id == attach.dataset_id:
-                try:
-                    value = resp.new_identity_data.get(col.name, '')
-                except Exception:
-                    value = ''
-            row.append(value)
-
-        # Answers: build mapping question_id -> value
-        answers_map = {a.question_id: a.value for a in resp.answers.all()}
-        for q in questions:
-            val = answers_map.get(q.id, '')
-            if isinstance(val, (dict, list)):
-                try:
-                    val = json.dumps(val, ensure_ascii=False)
-                except Exception:
-                    val = str(val)
-            row.append(val)
-
-        data_rows.append(row)
-
-    # Create Excel workbook using openpyxl directly
+    import csv
+    import io
+    from django.http import StreamingHttpResponse
     from datetime import datetime
-    from openpyxl import Workbook
-    from openpyxl.utils import get_column_letter
-    
-    wb = Workbook()
-    ws = wb.active
-    ws.title = 'Responses'
-    
-    # Write headers
-    ws.append(headers)
-    
-    # Write data rows
-    for row in data_rows:
-        ws.append(row)
-    
-    # Auto-adjust column widths
-    for idx, col in enumerate(headers, start=1):
-        # Calculate max length in column
-        max_length = len(str(col))  # Start with header length
-        if data_rows:
-            for row in data_rows:
-                try:
-                    cell_value = str(row[idx-1]) if idx-1 < len(row) else ''
-                    max_length = max(max_length, len(cell_value))
-                except (IndexError, TypeError):
-                    pass
-        
-        # Add some padding and cap at 50
-        adjusted_width = min(max_length + 2, 50)
-        column_letter = get_column_letter(idx)
-        ws.column_dimensions[column_letter].width = adjusted_width
-    
-    # Generate Excel file with date
+
+    def row_generator():
+        buf = io.StringIO()
+        writer = csv.writer(buf)
+
+        # First write header with UTF-8 BOM for Excel compatibility
+        writer.writerow(headers)
+        data = buf.getvalue()
+        # Use utf-8-sig (BOM) on first chunk
+        yield data.encode('utf-8-sig')
+        buf.seek(0)
+        buf.truncate(0)
+
+        # Iterate responses without loading all into memory
+        for resp in responses_qs.iterator():
+            row = []
+            row.append(resp.submitted_at.strftime('%Y-%m-%d %H:%M:%S') if resp.submitted_at else '')
+            row.append('Yes' if resp.is_complete else 'No')
+
+            # For record display, try attachments' display_column if available
+            record_display = ''
+            if resp.record:
+                for attach in md_attachments:
+                    if resp.record.dataset_id == attach.dataset_id:
+                        record_display = attach.get_record_display_value(resp.record)
+                        break
+                if not record_display:
+                    record_display = str(resp.record)
+
+            row.append(record_display)
+            row.append('Yes (Pending Approval)' if (resp.is_new_identity and not resp.record) else ('Yes (Approved)' if (resp.is_new_identity and resp.record) else 'No'))
+
+            # Master data columns values
+            for attach, col, header in md_columns:
+                value = ''
+                if resp.record and resp.record.dataset_id == attach.dataset_id:
+                    try:
+                        value = resp.record.data.get(col.name, '')
+                    except Exception:
+                        value = ''
+                elif resp.is_new_identity and resp.new_identity_dataset_id == attach.dataset_id:
+                    try:
+                        value = resp.new_identity_data.get(col.name, '')
+                    except Exception:
+                        value = ''
+                row.append(value)
+
+            # Answers: build mapping question_id -> value
+            answers_map = {a.question_id: a.value for a in resp.answers.all()}
+            for q in questions:
+                val = answers_map.get(q.id, '')
+                if isinstance(val, (dict, list)):
+                    try:
+                        val = json.dumps(val, ensure_ascii=False)
+                    except Exception:
+                        val = str(val)
+                row.append(val)
+
+            writer.writerow(row)
+            data = buf.getvalue()
+            yield data.encode('utf-8')
+            buf.seek(0)
+            buf.truncate(0)
+
+    # Build filename and response
     current_date = datetime.now().strftime('%Y-%m-%d')
-    filename = f"{form_obj.slug or slugify(form_obj.title)}-responses-{current_date}.xlsx"
-    response = HttpResponse(
-        content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
-    )
+    filename = f"{form_obj.slug or slugify(form_obj.title)}-responses-{current_date}.csv"
+    response = StreamingHttpResponse(row_generator(), content_type='text/csv')
     response['Content-Disposition'] = f'attachment; filename="{filename}"'
-    
-    # Save workbook to response
-    wb.save(response)
-    
+
     return response
 
 class FormQRCodeView(DetailView):
