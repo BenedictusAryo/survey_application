@@ -478,8 +478,9 @@ def export_responses_excel(request, pk):
     # Build full header row
     headers = base_headers + [h for (_, _, h) in md_columns] + question_headers
 
-    # Prepare queryset with prefetched relations; use iterator() for low memory
+    # Prepare queryset with prefetched relations
     responses_qs = form_obj.responses.select_related('user', 'record').prefetch_related('answers')
+    total_responses = responses_qs.count()
 
     import csv
     import io
@@ -498,8 +499,8 @@ def export_responses_excel(request, pk):
         buf.seek(0)
         buf.truncate(0)
 
-        # Iterate responses without loading all into memory
-        for resp in responses_qs.iterator():
+        # Iterate responses (use normal iteration so prefetch_related applies)
+        for resp in responses_qs:
             row = []
             row.append(resp.submitted_at.strftime('%Y-%m-%d %H:%M:%S') if resp.submitted_at else '')
             row.append('Yes' if resp.is_complete else 'No')
@@ -554,6 +555,8 @@ def export_responses_excel(request, pk):
     filename = f"{form_obj.slug or slugify(form_obj.title)}-responses-{current_date}.csv"
     response = StreamingHttpResponse(row_generator(), content_type='text/csv')
     response['Content-Disposition'] = f'attachment; filename="{filename}"'
+    # Expose total responses in a header so clients can verify download completeness
+    response['X-Total-Responses'] = str(total_responses)
 
     return response
 
