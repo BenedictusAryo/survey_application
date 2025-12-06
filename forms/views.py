@@ -1,5 +1,7 @@
 
+from collections import Counter
 from django.views.generic import ListView, CreateView, DetailView, UpdateView, DeleteView, View
+from django.core.paginator import Paginator
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib import messages
 from django.urls import reverse_lazy
@@ -430,12 +432,82 @@ class FormResponsesView(LoginRequiredMixin, DetailView):
         form_obj = self.object
         
         # Get all responses for this form
-        responses = form_obj.responses.select_related('user', 'record').prefetch_related('answers').all()
+        responses_qs = form_obj.responses.select_related('user', 'record').prefetch_related('answers').all()
+        responses_list = list(responses_qs)
         
-        context['responses'] = responses
-        context['complete_count'] = responses.filter(is_complete=True).count()
+        context['responses'] = responses_qs
+        context['complete_count'] = responses_qs.filter(is_complete=True).count()
+
+        attachments = form_obj.master_data_attachments.select_related('dataset').all()
+        context['filter_statistics'] = self._build_filter_statistics(responses_list, attachments)
+
+        paginator = Paginator(responses_qs, self.paginate_by)
+        page_number = self.request.GET.get('page')
+        page_obj = paginator.get_page(page_number)
+
+        context['paginated_responses'] = page_obj
+        context['page_obj'] = page_obj
+        context['is_paginated'] = page_obj.has_other_pages()
+        context['latest_response'] = responses_qs.first()
         
         return context
+
+    def _build_filter_statistics(self, responses, attachments):
+        stats = []
+        for attachment in attachments:
+            if not attachment.filter_columns:
+                continue
+
+            column_stats = []
+            for column in attachment.filter_columns:
+                counter = Counter()
+                for response in responses:
+                    value = self._extract_filter_value(response, attachment.dataset_id, column)
+                    if value:
+                        counter[value] += 1
+
+                if counter:
+                    sorted_values = sorted(counter.items(), key=lambda item: (-item[1], item[0]))
+                    column_stats.append({
+                        'column': column,
+                        'values': [
+                            {'value': val, 'count': count}
+                            for val, count in sorted_values
+                        ]
+                    })
+
+            if column_stats:
+                stats.append({
+                    'attachment': attachment,
+                    'columns': column_stats
+                })
+
+        return stats
+
+    def _extract_filter_value(self, response, dataset_id, column):
+        data_source = None
+        if response.record and response.record.dataset_id == dataset_id:
+            data_source = response.record.data
+        elif response.is_new_identity and response.new_identity_dataset_id == dataset_id:
+            data_source = response.new_identity_data or {}
+
+        if not data_source:
+            return None
+
+        raw_value = data_source.get(column)
+        return self._normalize_filter_value(raw_value)
+
+    def _normalize_filter_value(self, raw_value):
+        if raw_value is None:
+            return None
+        if isinstance(raw_value, (list, tuple)):
+            normalized = ', '.join(str(v) for v in raw_value if v is not None)
+        elif isinstance(raw_value, dict):
+            normalized = json.dumps(raw_value, ensure_ascii=False)
+        else:
+            normalized = str(raw_value).strip()
+
+        return normalized or None
 
 
 def export_responses_excel(request, pk):

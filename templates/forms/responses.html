@@ -49,15 +49,53 @@
     <div class="card bg-base-100 shadow-xl">
         <div class="card-body">
             <h3 class="text-sm text-gray-500 uppercase">Latest Response</h3>
-            {% if responses.first %}
-            <p class="text-sm font-semibold">{{ responses.first.submitted_at|date:"M d, Y" }}</p>
-            <p class="text-xs text-gray-500">{{ responses.first.submitted_at|time:"h:i A" }}</p>
+            {% if latest_response %}
+            <p class="text-sm font-semibold">{{ latest_response.submitted_at|date:"M d, Y" }}</p>
+            <p class="text-xs text-gray-500">{{ latest_response.submitted_at|time:"h:i A" }}</p>
             {% else %}
             <p class="text-sm text-gray-500">No responses yet</p>
             {% endif %}
         </div>
     </div>
 </div>
+
+{% if filter_statistics %}
+<div class="mb-6">
+    <div class="flex items-center justify-between mb-4">
+        <h2 class="text-xl font-semibold">Master data filter breakdown</h2>
+        <span class="text-xs text-gray-400">based on configured filters</span>
+    </div>
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+        {% for attachment_stat in filter_statistics %}
+        <div class="card bg-base-100 shadow-xl">
+            <div class="card-body">
+                <div class="flex items-center justify-between">
+                    <h3 class="font-semibold text-lg">{{ attachment_stat.attachment.dataset.name }}</h3>
+                    <span class="text-xs text-gray-500">
+                        {{ attachment_stat.columns|length }} filter{{ attachment_stat.columns|length|pluralize }}
+                    </span>
+                </div>
+                {% for column_stat in attachment_stat.columns %}
+                <div class="mt-4 border-t border-dashed border-gray-200 pt-4">
+                    <div class="flex items-center justify-between mb-2">
+                        <span class="text-sm text-gray-500">{{ column_stat.column }}</span>
+                        <span class="text-xs text-gray-400">{{ column_stat.values|length }} groups</span>
+                    </div>
+                    <div class="flex flex-wrap gap-2">
+                        {% for group in column_stat.values %}
+                        <span class="badge badge-outline">
+                            {{ group.value }}: {{ group.count }}
+                        </span>
+                        {% endfor %}
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endif %}
 
 <!-- Responses Table -->
 <div class="card bg-base-100 shadow-xl">
@@ -78,7 +116,7 @@
                         </tr>
                     </thead>
                     <tbody>
-                        {% for response in responses %}
+                        {% for response in paginated_responses %}
                         <tr>
                             <td>{{ forloop.counter }}</td>
                             <td>
