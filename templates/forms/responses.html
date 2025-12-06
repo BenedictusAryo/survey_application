@@ -65,7 +65,7 @@
         <h2 class="text-xl font-semibold">Master data filter breakdown</h2>
         <span class="text-xs text-gray-400">based on configured filters</span>
     </div>
-    <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+    <div class="grid grid-cols-1 gap-4">
         {% for attachment_stat in filter_statistics %}
         <div class="card bg-base-100 shadow-xl">
             <div class="card-body">
@@ -81,26 +81,24 @@
                         <thead>
                             <tr>
                                 <th class="text-left">Filter Column</th>
-                                <th class="text-left">Groups (value : count)</th>
+                                <th class="text-left">Group</th>
+                                <th class="text-left">Count</th>
                             </tr>
                         </thead>
                         <tbody>
                             {% for column_stat in attachment_stat.columns %}
-                            <tr>
-                                <td class="align-top text-sm text-gray-700 py-2">
-                                    <div class="font-medium">{{ column_stat.column }}</div>
-                                    <span class="text-xs text-gray-400">{{ column_stat.values|length }} groups</span>
-                                </td>
-                                <td class="py-2">
-                                    <div class="flex flex-wrap gap-2">
-                                        {% for group in column_stat.values %}
-                                        <span class="badge badge-outline">
-                                            {{ group.value }}: {{ group.count }}
-                                        </span>
-                                        {% endfor %}
-                                    </div>
-                                </td>
-                            </tr>
+                                {% for group in column_stat.values %}
+                                <tr>
+                                    {% if forloop.first %}
+                                    <td class="align-top text-sm text-gray-700 py-2" rowspan="{{ column_stat.values|length }}">
+                                        <div class="font-medium">{{ column_stat.column }}</div>
+                                        <span class="text-xs text-gray-400">{{ column_stat.values|length }} groups</span>
+                                    </td>
+                                    {% endif %}
+                                    <td class="text-sm py-2">{{ group.value }}</td>
+                                    <td class="text-sm py-2">{{ group.count }}</td>
+                                </tr>
+                                {% endfor %}
                             {% endfor %}
                         </tbody>
                     </table>
