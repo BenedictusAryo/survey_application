@@ -175,6 +175,59 @@
     
     <!-- Main Content: Questions & Actions -->
     <div class="lg:col-span-2 space-y-6">
+        <!-- Form Actions Card -->
+        <div class="card bg-base-100 shadow-xl border border-base-300 hover:shadow-2xl transition-all duration-300">
+            <div class="card-body">
+                <div class="flex items-center gap-3 mb-6">
+                    <div class="p-3 bg-info/10 rounded-lg">
+                        <i class="fas fa-bolt text-2xl text-info"></i>
+                    </div>
+                    <h2 class="card-title text-2xl">Quick Actions</h2>
+                </div>
+                
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    {% if form.status == 'draft' %}
+                        <a href="{% url 'forms:publish' form.pk %}" class="btn btn-success gap-2 btn-lg">
+                            <i class="fas fa-rocket"></i>
+                            Publish Form
+                        </a>
+                    {% elif form.status == 'published' %}
+                        <button class="btn btn-warning gap-2" onclick="unpublishForm()">
+                            <i class="fas fa-eye-slash"></i>
+                            <span class="hidden sm:inline">Unpublish</span>
+                        </button>
+                    {% endif %}
+                    
+                    <a href="{% url 'forms:responses' form.pk %}" class="btn btn-info gap-2">
+                        <i class="fas fa-chart-bar"></i>
+                        <span class="hidden sm:inline">View</span> Responses
+                    </a>
+                    
+                    {% if form.status == 'published' %}
+                        <button class="btn btn-secondary gap-2" onclick="copyPublicLink()">
+                            <i class="fas fa-link"></i>
+                            Copy Link
+                        </button>
+                        
+                        <button class="btn btn-success gap-2" onclick="shareToWhatsApp()">
+                            <i class="fab fa-whatsapp"></i>
+                            Share
+                        </button>
+                    {% endif %}
+                    
+                    <button class="btn btn-outline gap-2" onclick="duplicateForm()">
+                        <i class="fas fa-copy"></i>
+                        Duplicate
+                    </button>
+                    
+                    <button class="btn btn-error btn-outline gap-2" onclick="deleteForm()">
+                        <i class="fas fa-trash-alt"></i>
+                        Delete
+                    </button>
+                </div>
+            </div>
+        </div>
+
         <!-- Questions Card -->
         <div class="card bg-base-100 shadow-xl border border-base-300 hover:shadow-2xl transition-all duration-300">
             <div class="card-body">
@@ -241,59 +294,6 @@
                         </a>
                     </div>
                 {% endif %}
-            </div>
-        </div>
-        
-        <!-- Form Actions Card -->
-        <div class="card bg-base-100 shadow-xl border border-base-300 hover:shadow-2xl transition-all duration-300">
-            <div class="card-body">
-                <div class="flex items-center gap-3 mb-6">
-                    <div class="p-3 bg-info/10 rounded-lg">
-                        <i class="fas fa-bolt text-2xl text-info"></i>
-                    </div>
-                    <h2 class="card-title text-2xl">Quick Actions</h2>
-                </div>
-                
-                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                    {% if form.status == 'draft' %}
-                        <a href="{% url 'forms:publish' form.pk %}" class="btn btn-success gap-2 btn-lg">
-                            <i class="fas fa-rocket"></i>
-                            Publish Form
-                        </a>
-                    {% elif form.status == 'published' %}
-                        <button class="btn btn-warning gap-2" onclick="unpublishForm()">
-                            <i class="fas fa-eye-slash"></i>
-                            <span class="hidden sm:inline">Unpublish</span>
-                        </button>
-                    {% endif %}
-                    
-                    <a href="{% url 'forms:responses' form.pk %}" class="btn btn-info gap-2">
-                        <i class="fas fa-chart-bar"></i>
-                        <span class="hidden sm:inline">View</span> Responses
-                    </a>
-                    
-                    {% if form.status == 'published' %}
-                        <button class="btn btn-secondary gap-2" onclick="copyPublicLink()">
-                            <i class="fas fa-link"></i>
-                            Copy Link
-                        </button>
-                        
-                        <button class="btn btn-success gap-2" onclick="shareToWhatsApp()">
-                            <i class="fab fa-whatsapp"></i>
-                            Share
-                        </button>
-                    {% endif %}
-                    
-                    <button class="btn btn-outline gap-2" onclick="duplicateForm()">
-                        <i class="fas fa-copy"></i>
-                        Duplicate
-                    </button>
-                    
-                    <button class="btn btn-error btn-outline gap-2" onclick="deleteForm()">
-                        <i class="fas fa-trash-alt"></i>
-                        Delete
-                    </button>
-                </div>
             </div>
         </div>
     </div>
