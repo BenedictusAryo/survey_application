@@ -69,27 +69,42 @@
         {% for attachment_stat in filter_statistics %}
         <div class="card bg-base-100 shadow-xl">
             <div class="card-body">
-                <div class="flex items-center justify-between">
-                    <h3 class="font-semibold text-lg">{{ attachment_stat.attachment.dataset.name }}</h3>
-                    <span class="text-xs text-gray-500">
-                        {{ attachment_stat.columns|length }} filter{{ attachment_stat.columns|length|pluralize }}
-                    </span>
-                </div>
-                {% for column_stat in attachment_stat.columns %}
-                <div class="mt-4 border-t border-dashed border-gray-200 pt-4">
-                    <div class="flex items-center justify-between mb-2">
-                        <span class="text-sm text-gray-500">{{ column_stat.column }}</span>
-                        <span class="text-xs text-gray-400">{{ column_stat.values|length }} groups</span>
+                <div class="flex items-center justify-between mb-3">
+                    <div>
+                        <h3 class="font-semibold text-lg">{{ attachment_stat.attachment.dataset.name }}</h3>
+                        <p class="text-xs text-gray-500">{{ attachment_stat.columns|length }} filter{{ attachment_stat.columns|length|pluralize }}</p>
                     </div>
-                    <div class="flex flex-wrap gap-2">
-                        {% for group in column_stat.values %}
-                        <span class="badge badge-outline">
-                            {{ group.value }}: {{ group.count }}
-                        </span>
-                        {% endfor %}
-                    </div>
+                    <span class="badge badge-outline badge-sm">{{ attachment_stat.columns|length }} filters</span>
                 </div>
-                {% endfor %}
+                <div class="overflow-x-auto">
+                    <table class="table w-full">
+                        <thead>
+                            <tr>
+                                <th class="text-left">Filter Column</th>
+                                <th class="text-left">Groups (value : count)</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for column_stat in attachment_stat.columns %}
+                            <tr>
+                                <td class="align-top text-sm text-gray-700 py-2">
+                                    <div class="font-medium">{{ column_stat.column }}</div>
+                                    <span class="text-xs text-gray-400">{{ column_stat.values|length }} groups</span>
+                                </td>
+                                <td class="py-2">
+                                    <div class="flex flex-wrap gap-2">
+                                        {% for group in column_stat.values %}
+                                        <span class="badge badge-outline">
+                                            {{ group.value }}: {{ group.count }}
+                                        </span>
+                                        {% endfor %}
+                                    </div>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
             </div>
         </div>
         {% endfor %}
